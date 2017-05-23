@@ -1,0 +1,4 @@
+include ':app', ':BaseGameUtils'
+include ':libraries:BaseGameUtils', ':BeGenerous', ':ButtonClicker', ':CollectAllTheStars2', ':TrivialQuest', ':TrivialQuest2', ':TypeANumber', ':SkeletonTbmp', ':SavedGames'
+
+
