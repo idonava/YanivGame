@@ -24,6 +24,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -53,37 +54,37 @@ import java.util.Set;
 
 
 public class MainActivity extends Activity
-    implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-    View.OnClickListener, RealTimeMessageReceivedListener,
-    RoomStatusUpdateListener, RoomUpdateListener, OnInvitationReceivedListener {
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        View.OnClickListener, RealTimeMessageReceivedListener,
+        RoomStatusUpdateListener, RoomUpdateListener, OnInvitationReceivedListener {
 
     /*
      * API INTEGRATION SECTION. This section contains the code that integrates
      * the game with the Google Play game services API.
      */
 
-    final static String TAG = "YanivDebug";
+    final static String TAG = "[Yaniv]";
 
     // Request codes for the UIs that we show with startActivityForResult:
     final static int RC_SELECT_PLAYERS = 10000;
     final static int RC_INVITATION_INBOX = 10001;
     final static int RC_WAITING_ROOM = 10002;
 
-  // Request code used to invoke sign in user interactions.
-  private static final int RC_SIGN_IN = 9001;
+    // Request code used to invoke sign in user interactions.
+    private static final int RC_SIGN_IN = 9001;
 
-  // Client used to interact with Google APIs.
-  private GoogleApiClient mGoogleApiClient;
+    // Client used to interact with Google APIs.
+    private GoogleApiClient mGoogleApiClient;
 
-  // Are we currently resolving a connection failure?
-  private boolean mResolvingConnectionFailure = false;
+    // Are we currently resolving a connection failure?
+    private boolean mResolvingConnectionFailure = false;
 
-  // Has the user clicked the sign-in button?
-  private boolean mSignInClicked = false;
+    // Has the user clicked the sign-in button?
+    private boolean mSignInClicked = false;
 
-  // Set to true to automatically start the sign in flow when the Activity starts.
-  // Set to false to require the user to click the button in order to sign in.
-  private boolean mAutoStartSignInFlow = true;
+    // Set to true to automatically start the sign in flow when the Activity starts.
+    // Set to false to require the user to click the button in order to sign in.
+    private boolean mAutoStartSignInFlow = true;
 
     // Room ID where the currently active game is taking place; null if we're
     // not playing.
@@ -102,30 +103,35 @@ public class MainActivity extends Activity
     // invitation listener
     String mIncomingInvitationId = null;
 
+    private int turn = 0;
+    TextView tv;
+
     // Message buffer for sending messages
-    byte[] mMsgBuf = new byte[2];
+    byte[] mMsgBuf = new byte[3];
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-    // Create the Google Api Client with access to Games
-    mGoogleApiClient = new GoogleApiClient.Builder(this)
-        .addConnectionCallbacks(this)
-        .addOnConnectionFailedListener(this)
-        .addApi(Games.API).addScope(Games.SCOPE_GAMES)
-        .build();
+        // Create the Google Api Client with access to Games
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Games.API).addScope(Games.SCOPE_GAMES)
+                .build();
 
-    // set up a click listener for everything we care about
-    for (int id : CLICKABLES) {
-      findViewById(id).setOnClickListener(this);
+        // set up a click listener for everything we care about
+        for (int id : CLICKABLES) {
+            findViewById(id).setOnClickListener(this);
+        }
+        tv=(TextView) findViewById(R.id.turn);
     }
-  }
 
-  @Override
-  public void onClick(View v) {
-    Intent intent;
+    @Override
+    public void onClick(View v) {
+        Intent intent;
 
         switch (v.getId()) {
             case R.id.button_single_player:
@@ -140,14 +146,14 @@ public class MainActivity extends Activity
                 // NOTE: this check is here only because this is a sample! Don't include this
                 // check in your actual production app.
                 if (!BaseGameUtils.verifySampleSetup(this, R.string.app_id)) {
-                  Log.w(TAG, "*** Warning: setup problems detected. Sign in may not work!");
+                    Log.w(TAG, "*** Warning: setup problems detected. Sign in may not work!");
                 }
 
                 // start the sign-in flow
                 Log.d(TAG, "Sign-in button clicked");
                 mSignInClicked = true;
                 mGoogleApiClient.connect();
-            break;
+                break;
             case R.id.button_sign_out:
                 // user wants to sign out
                 // sign out.
@@ -203,7 +209,7 @@ public class MainActivity extends Activity
 
     @Override
     public void onActivityResult(int requestCode, int responseCode,
-            Intent intent) {
+                                 Intent intent) {
         super.onActivityResult(requestCode, responseCode, intent);
 
         switch (requestCode) {
@@ -234,13 +240,13 @@ public class MainActivity extends Activity
                 break;
             case RC_SIGN_IN:
                 Log.d(TAG, "onActivityResult with requestCode == RC_SIGN_IN, responseCode="
-                    + responseCode + ", intent=" + intent);
+                        + responseCode + ", intent=" + intent);
                 mSignInClicked = false;
                 mResolvingConnectionFailure = false;
                 if (responseCode == RESULT_OK) {
-                  mGoogleApiClient.connect();
+                    mGoogleApiClient.connect();
                 } else {
-                  BaseGameUtils.showActivityResultError(this,requestCode,responseCode, R.string.signin_other_error);
+                    BaseGameUtils.showActivityResultError(this, requestCode, responseCode, R.string.signin_other_error);
                 }
                 break;
         }
@@ -335,7 +341,7 @@ public class MainActivity extends Activity
             switchToScreen(R.id.screen_sign_in);
         }
         super.onStop();
-      }
+    }
 
     // Activity just got to the foreground. We switch to the wait screen because we will now
     // go through the sign-in flow (remember that, yes, every time the Activity comes back to the
@@ -346,12 +352,12 @@ public class MainActivity extends Activity
         if (mGoogleApiClient == null) {
             switchToScreen(R.id.screen_sign_in);
         } else if (!mGoogleApiClient.isConnected()) {
-            Log.d(TAG,"Connecting client.");
+            Log.d(TAG, "Connecting client.");
             switchToScreen(R.id.screen_wait);
             mGoogleApiClient.connect();
         } else {
             Log.w(TAG,
-              "GameHelper: client was already connected on onStart()");
+                    "GameHelper: client was already connected on onStart()");
         }
         super.onStart();
     }
@@ -408,12 +414,12 @@ public class MainActivity extends Activity
 
     @Override
     public void onInvitationRemoved(String invitationId) {
-       
-        if (mIncomingInvitationId.equals(invitationId)&&mIncomingInvitationId!=null) {
+
+        if (mIncomingInvitationId.equals(invitationId) && mIncomingInvitationId != null) {
             mIncomingInvitationId = null;
             switchToScreen(mCurScreen); // This will hide the invitation popup
         }
-      
+
     }
 
     /*
@@ -423,52 +429,52 @@ public class MainActivity extends Activity
 
     @Override
     public void onConnected(Bundle connectionHint) {
-      Log.d(TAG, "onConnected() called. Sign in successful!");
+        Log.d(TAG, "onConnected() called. Sign in successful!");
 
-      Log.d(TAG, "Sign-in succeeded.");
+        Log.d(TAG, "Sign-in succeeded.");
 
-      // register listener so we are notified if we receive an invitation to play
-      // while we are in the game
-      Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
+        // register listener so we are notified if we receive an invitation to play
+        // while we are in the game
+        Games.Invitations.registerInvitationListener(mGoogleApiClient, this);
 
-      if (connectionHint != null) {
-        Log.d(TAG, "onConnected: connection hint provided. Checking for invite.");
-        Invitation inv = connectionHint
-            .getParcelable(Multiplayer.EXTRA_INVITATION);
-        if (inv != null && inv.getInvitationId() != null) {
-          // retrieve and cache the invitation ID
-          Log.d(TAG,"onConnected: connection hint has a room invite!");
-          acceptInviteToRoom(inv.getInvitationId());
-          return;
+        if (connectionHint != null) {
+            Log.d(TAG, "onConnected: connection hint provided. Checking for invite.");
+            Invitation inv = connectionHint
+                    .getParcelable(Multiplayer.EXTRA_INVITATION);
+            if (inv != null && inv.getInvitationId() != null) {
+                // retrieve and cache the invitation ID
+                Log.d(TAG, "onConnected: connection hint has a room invite!");
+                acceptInviteToRoom(inv.getInvitationId());
+                return;
+            }
         }
-      }
-      switchToMainScreen();
+        switchToMainScreen();
 
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-      Log.d(TAG, "onConnectionSuspended() called. Trying to reconnect.");
-      mGoogleApiClient.connect();
+        Log.d(TAG, "onConnectionSuspended() called. Trying to reconnect.");
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-      Log.d(TAG, "onConnectionFailed() called, result: " + connectionResult);
+        Log.d(TAG, "onConnectionFailed() called, result: " + connectionResult);
 
-      if (mResolvingConnectionFailure) {
-        Log.d(TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
-        return;
-      }
+        if (mResolvingConnectionFailure) {
+            Log.d(TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
+            return;
+        }
 
-      if (mSignInClicked || mAutoStartSignInFlow) {
-        mAutoStartSignInFlow = false;
-        mSignInClicked = false;
-        mResolvingConnectionFailure = BaseGameUtils.resolveConnectionFailure(this, mGoogleApiClient,
-            connectionResult, RC_SIGN_IN, R.string.signin_other_error);
-      }
+        if (mSignInClicked || mAutoStartSignInFlow) {
+            mAutoStartSignInFlow = false;
+            mSignInClicked = false;
+            mResolvingConnectionFailure = BaseGameUtils.resolveConnectionFailure(this, mGoogleApiClient,
+                    connectionResult, RC_SIGN_IN, R.string.signin_other_error);
+        }
 
-      switchToScreen(R.id.screen_sign_in);
+        switchToScreen(R.id.screen_sign_in);
     }
 
     // Called when we are connected to the room. We're not ready to play yet! (maybe not everybody
@@ -480,10 +486,10 @@ public class MainActivity extends Activity
         //get participants and my ID:
         mParticipants = room.getParticipants();
         mMyId = room.getParticipantId(Games.Players.getCurrentPlayerId(mGoogleApiClient));
-        
-         // save room ID if its not initialized in onRoomCreated() so we can leave cleanly before the game starts.
-         if(mRoomId==null)
-          mRoomId = room.getRoomId();
+
+        // save room ID if its not initialized in onRoomCreated() so we can leave cleanly before the game starts.
+        if (mRoomId == null)
+            mRoomId = room.getRoomId();
 
         // print out the list of participants (for debug purposes)
         Log.d(TAG, "Room ID: " + mRoomId);
@@ -523,7 +529,7 @@ public class MainActivity extends Activity
             return;
         }
 
-       // save room ID so we can leave cleanly before the game starts.
+        // save room ID so we can leave cleanly before the game starts.
         mRoomId = room.getRoomId();
 
         // show the waiting room UI
@@ -622,7 +628,7 @@ public class MainActivity extends Activity
 
     // Current state of the game:
     int mSecondsLeft = -1; // how long until the game ends (seconds)
-    final static int GAME_DURATION = 20; // game duration, seconds.
+    final static int GAME_DURATION = 1000; // game duration, seconds.
     int mScore = 0; // user's current score
 
     // Reset game variables in preparation for a new game.
@@ -637,7 +643,7 @@ public class MainActivity extends Activity
     void startGame(boolean multiplayer) {
         mMultiplayer = multiplayer;
         updateScoreDisplay();
-        broadcastScore(false);
+       // broadcastScore(false);
         switchToScreen(R.id.screen_game);
 
         findViewById(R.id.button_click_me).setVisibility(View.VISIBLE);
@@ -673,6 +679,11 @@ public class MainActivity extends Activity
 
     // indicates the player scored one point
     void scoreOnePoint() {
+        if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
+            Toast.makeText(this, "not your turn",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
         if (mSecondsLeft <= 0)
             return; // too late!
         ++mScore;
@@ -705,8 +716,9 @@ public class MainActivity extends Activity
     public void onRealTimeMessageReceived(RealTimeMessage rtm) {
         byte[] buf = rtm.getMessageData();
         String sender = rtm.getSenderParticipantId();
-        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
-
+        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1] + "/" + (int) buf[2]);
+        turn=(int)buf[2];
+        tv.setText("" + turn);
         if (buf[0] == 'F' || buf[0] == 'U') {
             // score update.
             int existingScore = mParticipantScore.containsKey(sender) ?
@@ -723,6 +735,8 @@ public class MainActivity extends Activity
                 mParticipantScore.put(sender, thisScore);
             }
 
+            turn = (int) buf[2];
+
             // update the scores on the screen
             updatePeerScoresDisplay();
 
@@ -738,13 +752,20 @@ public class MainActivity extends Activity
     void broadcastScore(boolean finalScore) {
         if (!mMultiplayer)
             return; // playing single-player mode
+        Log.d(TAG, "mParticipants.get(turn).getParticipantId()= " + mParticipants.get(turn).getParticipantId() + " mMyId=" + mMyId);
+
 
         // First byte in message indicates whether it's a final score or not
         mMsgBuf[0] = (byte) (finalScore ? 'F' : 'U');
 
         // Second byte is the score.
         mMsgBuf[1] = (byte) mScore;
+        turn = ++turn % mParticipants.size();
 
+        mMsgBuf[2] = (byte) (turn);
+        Log.d(TAG, "turn= " +turn +" mMsgBuf[2]="+mMsgBuf[2]);
+
+        tv.setText(""+turn);
         // Send to every other participant.
         for (Participant p : mParticipants) {
             if (p.getParticipantId().equals(mMyId))
@@ -808,8 +829,7 @@ public class MainActivity extends Activity
     void switchToMainScreen() {
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
             switchToScreen(R.id.screen_main);
-        }
-        else {
+        } else {
             switchToScreen(R.id.screen_sign_in);
         }
     }
@@ -872,6 +892,4 @@ public class MainActivity extends Activity
     void stopKeepingScreenOn() {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
-
-
 }
