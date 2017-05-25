@@ -17,7 +17,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <color name="AccentColor">#cc0000</color>
+    <color name="AccentColor">#2c2020</color>
     <color name="PopupColor">@color/AccentColor</color>
     <color name="PopupTextColor">#ffffff</color>
     <color name="ButtonTextColor">#ffffff</color>
@@ -90,10 +90,15 @@
         <item name="android:textColor">@color/ButtonTextColor</item>
         <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingRight">10dp</item>
+        <item name="android:drawablePadding">2dip</item>
+        <item name="android:scaleY">1</item>
+
+
     </style>
 
     <style name="MainScreenButton" parent="@style/GameButton">
         <item name="android:layout_marginBottom">10dp</item>
+
     </style>
 
     <style name="MainScreenButtonBlurb" parent="@style/GameBlurb">

@@ -43,14 +43,26 @@ import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListene
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.yaniv.online.R;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+import java.util.Vector;
 
 
 public class MainActivity extends Activity
@@ -103,12 +115,44 @@ public class MainActivity extends Activity
     // invitation listener
     String mIncomingInvitationId = null;
 
+    // cell[0] cell[X]                         WHAT AND WHO                                                        EXPLAIN
+    //  TYPE
+    //   0	    1	Owner in the initial of the game. Anybody on the game when cards over.	Shuffle the cards and resend them on cell 1. Evreybody needs to load the new cards!
+    //   1      1	owner only in start	                                                    Sending the self cards to the other players
+    //   2   	1	Any participany when finish playing                                    	participant id
+    //   2	    2	Anybody when Drop cards	                                                sending the drop cards and update on each participant
+    //   2	    3	take from 0-primary 1-deck                                          	take from the primary or deck (and update in each screen).
+    //   2	    4	Cards he take (only if 0)	                                            remove the cards from the screen
+    //   3	    1	Anybody	                                                                message indicates whether it's a final score or not
+    //   3	    2	Anybody	                                                                The score
+    //   3	    3	Anybody	                                                                Whos turn
+    //   3	    4	Anybody	                                                                last turn (taking from the deck or the primary pot).
+
+    byte[] mMsgBuf = new byte[5];
+
+    //*/*/*/*/*/*  Yaniv  */*/*/*/*/*/
+    private boolean firstRound = true;
     private int turn = 0;
-    TextView tv;
+    private TextView tv;
+    //True if the participant is the owner of the game
+    private boolean owner = false;
+    private int numOfMessages = 0;
+    private static final Type DATA_TYPE =
+            new TypeToken<Vector<Card>>() {
+            }.getType();
+    private static final Type DATA_TYPE_CARDS =
+            new TypeToken<Cards>() {
+            }.getType();
 
-    // Message buffer for sending messages
-    byte[] mMsgBuf = new byte[3];
+    //Participants common objects
+    private Stack<ArrayList<Card>> primaryDeck;
+    private Cards cardDeck;
 
+    //Participant objects
+    private Vector<Card> myCards;
+    private int mySum;
+    private int lastDropType;
+    private Vector<Vector<Card>> participantsCards = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -126,7 +170,7 @@ public class MainActivity extends Activity
         for (int id : CLICKABLES) {
             findViewById(id).setOnClickListener(this);
         }
-        tv=(TextView) findViewById(R.id.turn);
+        tv = (TextView) findViewById(R.id.turn);
     }
 
     @Override
@@ -482,10 +526,18 @@ public class MainActivity extends Activity
     @Override
     public void onConnectedToRoom(Room room) {
         Log.d(TAG, "onConnectedToRoom.");
+        cardDeck = new Cards();
 
         //get participants and my ID:
         mParticipants = room.getParticipants();
         mMyId = room.getParticipantId(Games.Players.getCurrentPlayerId(mGoogleApiClient));
+
+
+        //ido 25/05/2017 - declare owner room boolean
+        if (getOwnerId().equals(mMyId)) {
+            owner = true;
+            ownerInitial();
+        }
 
         // save room ID if its not initialized in onRoomCreated() so we can leave cleanly before the game starts.
         if (mRoomId == null)
@@ -539,6 +591,9 @@ public class MainActivity extends Activity
     // Called when room is fully connected.
     @Override
     public void onRoomConnected(int statusCode, Room room) {
+        myCards = new Vector<>();
+        participantsCards = new Vector<Vector<Card>>();
+
         Log.d(TAG, "onRoomConnected(" + statusCode + ", " + room + ")");
         if (statusCode != GamesStatusCodes.STATUS_OK) {
             Log.e(TAG, "*** Error: onRoomConnected, status " + statusCode);
@@ -546,6 +601,78 @@ public class MainActivity extends Activity
             return;
         }
         updateRoom(room);
+        //Create new suffle deck.
+        if (owner) {
+            cardDeck = new Cards();
+            Log.d(TAG, "cards(: " + cardDeck.jp);
+
+            for (int j = 0; j < 5; j++) {
+                myCards.add(cardDeck.jp.remove(0));
+            }
+            ((TextView) findViewById(R.id.mycards)).setText("" + myCards.toString());
+            participantsCards.add(myCards);
+
+            for (Participant p : mParticipants) {
+                if (p.getParticipantId().equals(mMyId))
+                    continue;
+                if (p.getStatus() != Participant.STATUS_JOINED)
+                    continue;
+                else {
+
+                    Vector<Card> v = new Vector<>();
+                    for (int j = 0; j < 5; j++) {
+                        v.add(cardDeck.jp.remove(0));
+                    }
+                    participantsCards.add(v);
+
+                    Gson gson = new Gson();
+                    String c = gson.toJson(v, DATA_TYPE);
+                    try {
+                        byte[] b = toByte(c);
+                        byte[] sendCards = new byte[5 + b.length];
+                        sendCards[0] = (int) 1;
+                        for (int i = 0; i < b.length; i++) {
+                            sendCards[5 + i] = b[i];
+                        }
+                        // it's an interim score notification, so we can use unreliable
+                        Games.RealTimeMultiplayer.sendUnreliableMessage(mGoogleApiClient, sendCards, mRoomId,
+                                p.getParticipantId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+            }
+            for (Participant p : mParticipants) {
+                if (p.getParticipantId().equals(mMyId))
+                    continue;
+                if (p.getStatus() != Participant.STATUS_JOINED)
+                    continue;
+                else {
+                    Gson gson = new Gson();
+                    String c = gson.toJson(cardDeck, DATA_TYPE_CARDS);
+                    try {
+                        byte[] b = toByte(c);
+                        byte[] sendCards = new byte[5 + b.length];
+                        sendCards[0] = (int) 0;
+                        for (int i = 0; i < b.length; i++) {
+                            sendCards[5 + i] = b[i];
+                        }
+                        // it's an interim score notification, so we can use unreliable
+                        Games.RealTimeMultiplayer.sendUnreliableMessage(mGoogleApiClient, sendCards, mRoomId,
+                                p.getParticipantId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+            }
+            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+
+        }
+
     }
 
     @Override
@@ -620,6 +747,9 @@ public class MainActivity extends Activity
         if (mParticipants != null) {
             updatePeerScoresDisplay();
         }
+        if (cardDeck != null) {
+            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        }
     }
 
     /*
@@ -643,7 +773,7 @@ public class MainActivity extends Activity
     void startGame(boolean multiplayer) {
         mMultiplayer = multiplayer;
         updateScoreDisplay();
-       // broadcastScore(false);
+        // broadcastScore(false);
         switchToScreen(R.id.screen_game);
 
         findViewById(R.id.button_click_me).setVisibility(View.VISIBLE);
@@ -679,11 +809,10 @@ public class MainActivity extends Activity
 
     // indicates the player scored one point
     void scoreOnePoint() {
-        if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
-            Toast.makeText(this, "not your turn",
-                    Toast.LENGTH_LONG).show();
+        if (!updateTurnUi()) {
             return;
         }
+
         if (mSecondsLeft <= 0)
             return; // too late!
         ++mScore;
@@ -716,36 +845,85 @@ public class MainActivity extends Activity
     public void onRealTimeMessageReceived(RealTimeMessage rtm) {
         byte[] buf = rtm.getMessageData();
         String sender = rtm.getSenderParticipantId();
-        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1] + "/" + (int) buf[2]);
-        turn=(int)buf[2];
-        tv.setText("" + turn);
-        if (buf[0] == 'F' || buf[0] == 'U') {
-            // score update.
-            int existingScore = mParticipantScore.containsKey(sender) ?
-                    mParticipantScore.get(sender) : 0;
-            int thisScore = (int) buf[1];
-            if (thisScore > existingScore) {
-                // this check is necessary because packets may arrive out of
-                // order, so we
-                // should only ever consider the highest score we received, as
-                // we know in our
-                // game there is no way to lose points. If there was a way to
-                // lose points,
-                // we'd have to add a "serial number" to the packet.
-                mParticipantScore.put(sender, thisScore);
+        //  Log.d(TAG, "Message received: " + (int) buf[0] + "/" + (char) buf[1] + "/" + (int) buf[2] + "/" + (int) buf[3]);
+        //Game is started, owner send the cardsDeck, any participant needs to reload the cards into cardDeck
+        if ((int) buf[0] == 0) {
+            byte[] dataArray = Arrays.copyOfRange(buf, 5, buf.length);
+            String a = null;
+            try {
+                a = (String) fromByte(dataArray);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
 
-            turn = (int) buf[2];
+            cardDeck = new Gson().fromJson(a, DATA_TYPE_CARDS);
 
-            // update the scores on the screen
-            updatePeerScoresDisplay();
+            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        }
+        // Owner create the cards for all participant. needs to save it on Mycards.
+        else if ((int) buf[0] == 1) {
 
-            // if it's a final score, mark this participant as having finished
-            // the game
-            if ((char) buf[0] == 'F') {
-                mFinishedParticipants.add(rtm.getSenderParticipantId());
+            byte[] dataArray = Arrays.copyOfRange(buf, 5, buf.length);
+            String a = null;
+            try {
+                a = (String) fromByte(dataArray);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            Log.d(TAG, "a from: " + a);
+            Log.d(TAG, "[] from: " + Arrays.toString(dataArray));
+            Log.d(TAG, "full[] to: " + Arrays.toString(buf));
+            Log.d(TAG, "mycards before" + myCards);
+
+            myCards = new Gson().fromJson(a, DATA_TYPE);
+            Log.d(TAG, "mycards after" + myCards);
+
+            ((TextView) findViewById(R.id.mycards)).setText("" + myCards.toString());
+        }
+        // When participant finish to play
+        else if ((int) buf[0] == 2) {
+
+        }
+        // Regular messages to change the turn.
+        else {
+
+            turn = (int) buf[3];
+            tv.setText("" + turn);
+            updateTurnUi();
+
+            if (buf[1] == 'F' || buf[1] == 'U') {
+                // score update.
+                int existingScore = mParticipantScore.containsKey(sender) ?
+                        mParticipantScore.get(sender) : 0;
+                int thisScore = (int) buf[2];
+                if (thisScore > existingScore) {
+                    // this check is necessary because packets may arrive out of
+                    // order, so we
+                    // should only ever consider the highest score we received, as
+                    // we know in our
+                    // game there is no way to lose points. If there was a way to
+                    // lose points,
+                    // we'd have to add a "serial number" to the packet.
+                    mParticipantScore.put(sender, thisScore);
+                }
+
+                turn = (int) buf[3];
+
+                // update the scores on the screen
+                updatePeerScoresDisplay();
+
+                // if it's a final score, mark this participant as having finished
+                // the game
+                if ((char) buf[1] == 'F') {
+                    mFinishedParticipants.add(rtm.getSenderParticipantId());
+                }
             }
         }
+
     }
 
     // Broadcast my score to everybody else.
@@ -754,18 +932,18 @@ public class MainActivity extends Activity
             return; // playing single-player mode
         Log.d(TAG, "mParticipants.get(turn).getParticipantId()= " + mParticipants.get(turn).getParticipantId() + " mMyId=" + mMyId);
 
-
+        mMsgBuf[0] = (byte) 3;
         // First byte in message indicates whether it's a final score or not
-        mMsgBuf[0] = (byte) (finalScore ? 'F' : 'U');
+        mMsgBuf[1] = (byte) (finalScore ? 'F' : 'U');
 
         // Second byte is the score.
-        mMsgBuf[1] = (byte) mScore;
+        mMsgBuf[2] = (byte) mScore;
         turn = ++turn % mParticipants.size();
 
-        mMsgBuf[2] = (byte) (turn);
-        Log.d(TAG, "turn= " +turn +" mMsgBuf[2]="+mMsgBuf[2]);
+        mMsgBuf[3] = (byte) (turn);
+        Log.d(TAG, "turn= " + turn + " mMsgBuf[3]=" + mMsgBuf[3]);
 
-        tv.setText(""+turn);
+        tv.setText("" + turn);
         // Send to every other participant.
         for (Participant p : mParticipants) {
             if (p.getParticipantId().equals(mMyId))
@@ -782,6 +960,7 @@ public class MainActivity extends Activity
                         p.getParticipantId());
             }
         }
+        updateTurnUi();
     }
 
     /*
@@ -849,7 +1028,7 @@ public class MainActivity extends Activity
 
     // updates the screen with the scores from our peers
     void updatePeerScoresDisplay() {
-        ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me");
+        ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
         int[] arr = {
                 R.id.score1, R.id.score2, R.id.score3
         };
@@ -862,10 +1041,19 @@ public class MainActivity extends Activity
                     continue;
                 if (p.getStatus() != Participant.STATUS_JOINED)
                     continue;
-                int score = mParticipantScore.containsKey(pid) ? mParticipantScore.get(pid) : 0;
-                ((TextView) findViewById(arr[i])).setText(formatScore(score) + " - " +
-                        p.getDisplayName());
-                ++i;
+
+                if (participantsCards == null) {
+                    int score = mParticipantScore.containsKey(pid) ? mParticipantScore.get(pid) : 0;
+                    ((TextView) findViewById(arr[i])).setText(formatScore(score) + " - " +
+                            p.getDisplayName() + " - ");
+                } else {
+                    if (participantsCards.size() > 1) {
+                        int score = mParticipantScore.containsKey(pid) ? mParticipantScore.get(pid) : 0;
+                        ((TextView) findViewById(arr[i])).setText(formatScore(score) + " - " +
+                                p.getDisplayName() + " - " + participantsCards.get(i));
+                    }
+                    ++i;
+                }
             }
         }
 
@@ -892,4 +1080,62 @@ public class MainActivity extends Activity
     void stopKeepingScreenOn() {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
+
+    String getOwnerId() {
+        return mParticipants.get(0).getParticipantId();
+    }
+
+    boolean updateTurnUi() {
+        if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
+            findViewById(R.id.button_click_me).setEnabled(false);
+            return false;
+        } else {
+            findViewById(R.id.button_click_me).setEnabled(true);
+            return true;
+        }
+    }
+
+    public static byte[] toByte(Object obj) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ObjectOutputStream os = new ObjectOutputStream(out);
+        os.writeObject(obj);
+        return out.toByteArray();
+    }
+
+    public static Object fromByte(byte[] data) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        ObjectInputStream is = new ObjectInputStream(in);
+        return is.readObject();
+    }
+
+    //*/*/*/*/*/*/*/*   Yaniv Game Functions   */*/*/*/*/*/*/*//
+
+    //Owner Functions
+    //First Initial
+    void ownerInitial() {
+        this.cardDeck = new Cards();
+        this.primaryDeck = new Stack<>();
+        this.participantsCards = new Vector<>();
+        // Add the first card to primary deck.
+        ArrayList<Card> list = new ArrayList<Card>() {
+            {
+                add(cardDeck.jp.remove(0));
+            }
+        };
+        primaryDeck.add(list);
+
+        // Division card to participants.
+        for (int i = 0; i < mParticipants.size(); i++) {
+            Vector<Card> pcard = new Vector<>();
+            for (int j = 0; j < 5; j++) {
+                pcard.add(cardDeck.jp.remove(0));
+            }
+            participantsCards.add(pcard);
+        }
+
+
+    }
+    //Initial Functions
+
+
 }
