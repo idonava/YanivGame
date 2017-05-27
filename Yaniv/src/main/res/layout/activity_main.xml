@@ -164,14 +164,23 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="TextView" />
+            android:text="Card Deck" />
 
-        <TextView
-            android:id="@+id/mycards"
+        <EditText
+            android:id="@+id/drop_cards"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="TextView" />
+            android:ems="10"
+            android:hint="Choose cards to drop"
+            android:inputType="text"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/owner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/my_score"
@@ -193,19 +202,23 @@
 
             <TextView
                 android:id="@+id/score0"
-                style="@style/ScoreText" />
+                style="@style/ScoreText"
+                android:textSize="10dp" />
 
             <TextView
                 android:id="@+id/score1"
-                style="@style/ScoreText" />
+                style="@style/ScoreText"
+                android:textSize="10dp" />
 
             <TextView
                 android:id="@+id/score2"
-                style="@style/ScoreText" />
+                style="@style/ScoreText"
+                android:textSize="10dp" />
 
             <TextView
                 android:id="@+id/score3"
-                style="@style/ScoreText" />
+                style="@style/ScoreText"
+                android:textSize="10dp" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
