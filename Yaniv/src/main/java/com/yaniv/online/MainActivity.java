@@ -57,6 +57,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,6 +65,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
@@ -129,7 +131,11 @@ public class MainActivity extends Activity
     //   4	    1	Anybody	                                                                message indicates whether it's a final score or not
     //   4	    2	Anybody	                                                                The score
     //   4	    3	Anybody	                                                                Whos turn
-    //   4	    4	Anybody	                                                                last turn (taking from the deck or the primary pot).
+    //   4	    4	Anybody	         CANCEL FOR NOW                                         last turn (taking from the deck or the primary pot).
+    //   4	    4	Anybody	                                                                last Drop Type
+    //   5	    1	Owner in the initial of the game. Anybody on the game when cards over.	Sending the last drop cards to the primary deck.
+    //   6	    1	Anybody when finished is turn send his new cards                    	Sending the new myCards Vector to all participants.
+
 
     byte[] mMsgBuf = new byte[5];
 
@@ -146,6 +152,9 @@ public class MainActivity extends Activity
     private static final Type DATA_TYPE_CARD_DECK =
             new TypeToken<Cards>() {
             }.getType();
+    private static final Type DATA_TYPE_PRIMARY_DECK =
+            new TypeToken<Stack<ArrayList<Card>>>() {
+            }.getType();
     private static final Type DATA_TYPE_MY_CARDS =
             new TypeToken<Vector<Card>>() {
             }.getType();
@@ -161,13 +170,19 @@ public class MainActivity extends Activity
 
     // Participants who sent us their final score.
     Set<String> mFinishedParticipants = new HashSet<String>();
-
+    private int yanivMinScore = 5;
     //Participant objects
     private Vector<Card> myCards;
     private int mySum;
     private int lastDropType;
+    private int myLastDropType;
     // private Vector<Vector<Card>> participantsCards = null;
     private int[] invalidDrop = {999};
+    private int[] dropCards;
+    private int[] takingCard;
+    EditText dropCardsEditText;
+    EditText takeCardEditText;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -244,22 +259,261 @@ public class MainActivity extends Activity
                 startQuickGame();
                 break;
             case R.id.button_click_me:
-                // (gameplay) user clicked the "click me" button
-              /*  final EditText input = new EditText(MainActivity.this);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-                input.setLayoutParams(lp);*/
-                int[] a=dropCards(primaryDeck);
-                if (a==invalidDrop){
+                Log.d(TAG, "[Button] - ClickMe(Play)");
+                dropCardsDialog();
 
+
+/*
+               //Taking from the primary pot.
+                if (takingCard[0] == 0) {
+                    System.out.println(Arrays.toString(dropCards));
+                   // takeFromPrimaryPot(dropCards);
                 }
-                else {
-                    scoreOnePoint();
-                    break;
+                //Taking from the jackpot
+                if (takingCard[0] == 1) {
+                //    takeFromJackPot(dropCards);
                 }
+*/
+
+                break;
         }
     }
+
+    private void takeCardsDialog_Choose() {
+
+        takeCardEditText = new EditText(this);
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(takeCardEditText);
+
+        builder.setMessage("Enter the card you want to take:\n" + getPopPrimaryDeckCardWithVal());
+        builder.setPositiveButton("Take the Cards",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Do nothing here because we override this button later to change the close behaviour.
+                        //However, we still need this because on older versions of Android unless we
+                        //pass a handler the button doesn't get instantiated
+                    }
+                });
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+//Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Asking the player which the cards to drop.
+                takingCard = takeFrom();
+                if (takingCard == invalidDrop) {
+                    Log.d(TAG, "Invalid taking card parameter");
+                    builder.setMessage("Enter 0 for taking from Primary Deck OR 1 from the Card Deck\nINVALID PARAMETER");
+                    takeCardEditText.setText("");
+                } else {
+                    scoreOnePoint();
+                    dialog.dismiss();
+                }
+            }
+        });
+    }
+
+    private void takeCardsDialog_2() {
+        Log.d(TAG, "takeCardsDialog_2.");
+        final ArrayList<Card> myDrop = new ArrayList<Card>();
+
+        //Taking card from the card deck
+        if (takingCard[0] == 1) {
+            //Needs to do that later
+           /* if (c.getSize() == 0) {
+                suffleJackPot();
+            }
+            */
+            Card pop = cardDeck.jp.remove(0);
+
+            for (int i = 0; i < dropCards.length; i++) {
+
+                int card = dropCards[i];
+                myDrop.add(myCards.get(card));
+                Log.d(TAG, "Dropping: " + dropCards[i] + " sym: " + myDrop.get(i));
+
+            }
+            for (int i = 0; i < myDrop.size(); i++) {
+                myCards.remove(myDrop.get(i));
+            }
+            Log.d(TAG, "primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString());
+
+         //   System.out.println("You got from the JackPot: " + pop.toString());
+            myCards.add(pop);
+            calculateSum();
+        //    scoreOnePoint();
+
+            //    System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
+        } else {
+            takeCardEditText = new EditText(this);
+
+            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setView(takeCardEditText);
+
+            builder.setMessage("Enter num for taking from the last drop\n" + getPopPrimaryDeckCardWithVal());
+            builder.setPositiveButton("Take!",
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //Do nothing here because we override this button later to change the close behaviour.
+                            //However, we still need this because on older versions of Android unless we
+                            //pass a handler the button doesn't get instantiated
+                        }
+                    });
+            final AlertDialog dialog = builder.create();
+            dialog.show();
+//Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "[CHECK1] primarydeck: "+primaryDeck);
+
+                    ArrayList<Card> lastDrop = new ArrayList<Card>();
+                    Log.d(TAG, "primaryDeck=" + primaryDeck.toString());
+                    lastDrop = primaryDeck.pop();
+                    Log.d(TAG, "lastDrop=" + lastDrop.toString());
+
+                    Card pop = lastDrop.get(0);
+                    boolean bool = false;
+                    if (lastDropType == 1) {
+                        pop = lastDrop.remove(0);
+                    } else if (lastDropType == 2) { //case equal
+                        System.out.println("# Enter a vaild index of card to take from the last drop:");
+                        int n;
+                        while (bool == false) {
+                            Scanner reader2 = new Scanner(System.in);
+                            n = reader2.nextInt();
+                            if (n >= 0 && n <= lastDrop.size() - 1) {
+                                pop = lastDrop.remove(n);
+                                bool = true;
+                            } else {
+                                System.out.println("## You enter illegal card to take, Try again. ");
+                            }
+                        }
+                    } else {    // case order
+                        System.out.println("# Enter a vaild index of card to take from the last drop:");
+                        while (bool == false) {
+                            Scanner reader2 = new Scanner(System.in);
+                            int n = reader2.nextInt();
+                            if (n == 0 || n == lastDrop.size() - 1) {
+                                pop = lastDrop.remove(n);
+                                bool = true;
+                            } else {
+                                System.out.println("## You enter illegal card to take, Try again. ");
+                            }
+                        }
+
+                    }
+                    primaryDeck.add(lastDrop);
+                    myCards.add(pop);
+                    Log.d(TAG, "[CHECK2] primarydeck: "+primaryDeck);
+                    Log.d(TAG, "[CHECK2] myDrop: "+myDrop);
+
+                    dialog.dismiss();
+                }
+            });
+
+
+        }
+
+        primaryDeck.add(myDrop);
+        scoreOnePoint();
+
+    }
+
+    private void takeCardsDialog_1() {
+        Log.d(TAG, "takeCardsDialog_1.");
+
+        takeCardEditText = new EditText(this);
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(takeCardEditText);
+
+        builder.setMessage("Enter 0 for taking from Primary Deck OR 1 from the Card Deck");
+        builder.setPositiveButton("Take card back (2/3)",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Do nothing here because we override this button later to change the close behaviour.
+                        //However, we still need this because on older versions of Android unless we
+                        //pass a handler the button doesn't get instantiated
+                    }
+                });
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+//Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Asking the player which the cards to drop.
+                takingCard = takeFrom();
+                Log.d(TAG, "dropCardsDialog - Entered: " + takeCardEditText.getText());
+
+                if (takingCard == invalidDrop) {
+                    Log.d(TAG, "takeCardsDialog_1 - Invalid taking card parameter");
+                    builder.setMessage("Enter 0 for taking from Primary Deck OR 1 from the Card Deck\nINVALID PARAMETER");
+                    takeCardEditText.setText("");
+                } else {
+                    Log.d(TAG, "takeCardsDialog_1 - Valid taking card parameter - continue to takeCardsDialog_2");
+
+                    takeCardsDialog_2();
+                    dialog.dismiss();
+                }
+            }
+        });
+        updateCardDeck();
+
+    }
+
+    private void dropCardsDialog() {
+        Log.d(TAG, "dropCardsDialog.");
+
+        dropCardsEditText = new EditText(this);
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dropCardsEditText);
+
+        builder.setMessage("Drop cards (Sep. with comma):\n" + getMyCardsWithVal());
+        builder.setPositiveButton("Drop you cards (1/3)",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        //Do nothing here because we override this button later to change the close behaviour.
+                        //However, we still need this because on older versions of Android unless we
+                        //pass a handler the button doesn't get instantiated
+                    }
+                });
+        final AlertDialog dialog = builder.create();
+        dialog.show();
+//Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Asking the player which the cards to drop.
+                dropCards = dropCards(primaryDeck);
+                Log.d(TAG, "dropCardsDialog - Entered: " + dropCardsEditText.getText());
+
+                if (dropCards == invalidDrop) {
+                    Log.d(TAG, "[Button] - ClickMe(Play) - invalid drop");
+                    builder.setMessage("Drop cards (Sep. with comma):\n" + getMyCardsWithVal() + "\n    INVALID DROP");
+                    Log.d(TAG, "dropCardsDialog - Invalid Drop!");
+
+                    dropCardsEditText.setText("");
+                } else {
+                    Log.d(TAG, "dropCardsDialog - Valid Drop - Continue to takeCardsDialog_1()");
+
+                    takeCardsDialog_1();
+
+                    dialog.dismiss();
+
+                }
+            }
+        });
+    }
+
 
     void startQuickGame() {
         // quick-start a game with 1 randomly selected opponent
@@ -639,39 +893,86 @@ public class MainActivity extends Activity
 
             //  createParticipantsCards();
             //Sending the participants cards.
-            byte[] b = new byte[0];
-            try {
-                b = toGson(mParticipantCards, DATA_TYPE_M_PARTICIPANT_CARDS);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            byte[] sendMsg = new byte[5 + b.length];
-            sendMsg[0] = 1;
-            for (int i = 0; i < b.length; i++) {
-                sendMsg[5 + i] = b[i];
-            }
-            messageToAllParticipants(sendMsg, true);
+            sendParticipantsCardsToAllParticipants();
 
             updateMyUI();
             // updatePlayersUI();
 
             //Sending the card deck to all participant
-            try {
-                b = toGson(cardDeck, DATA_TYPE_CARD_DECK);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            sendMsg = new byte[5 + b.length];
-            sendMsg[0] = (int) 0;
-            for (int i = 0; i < b.length; i++) {
-                sendMsg[5 + i] = b[i];
-            }
-            messageToAllParticipants(sendMsg, true);
-
-            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+            sendCardDeckToAllParticipants();
+            sendPrimaryDeckToAllParticipants();
 
         }
 
+    }
+
+    private void sendPrimaryDeckToAllParticipants() {
+        byte[] b = new byte[0];
+
+        try {
+            b = toGson(primaryDeck, DATA_TYPE_PRIMARY_DECK);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] sendMsg = new byte[5 + b.length];
+        sendMsg[0] = (int) 5;
+        for (int i = 0; i < b.length; i++) {
+            sendMsg[5 + i] = b[i];
+        }
+        messageToAllParticipants(sendMsg, true);
+
+        ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+    }
+
+    private void sendMyCardsToAllParticipants() {
+        byte[] b = new byte[0];
+
+        try {
+            b = toGson(myCards, DATA_TYPE_MY_CARDS);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] sendMsg = new byte[5 + b.length];
+        sendMsg[0] = (int) 2;
+        for (int i = 0; i < b.length; i++) {
+            sendMsg[5 + i] = b[i];
+        }
+        messageToAllParticipants(sendMsg, true);
+
+    }
+
+    private void sendParticipantsCardsToAllParticipants() {
+        byte[] b = new byte[0];
+        try {
+            b = toGson(mParticipantCards, DATA_TYPE_M_PARTICIPANT_CARDS);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] sendMsg = new byte[5 + b.length];
+        sendMsg[0] = 1;
+        for (int i = 0; i < b.length; i++) {
+            sendMsg[5 + i] = b[i];
+        }
+        messageToAllParticipants(sendMsg, true);
+
+    }
+
+    private void sendCardDeckToAllParticipants() {
+        byte[] b = new byte[0];
+
+        try {
+            b = toGson(cardDeck, DATA_TYPE_CARD_DECK);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] sendMsg = new byte[5 + b.length];
+        sendMsg[0] = (int) 0;
+        for (int i = 0; i < b.length; i++) {
+            sendMsg[5 + i] = b[i];
+        }
+        messageToAllParticipants(sendMsg, true);
+
+        ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
     }
 
 
@@ -772,6 +1073,10 @@ public class MainActivity extends Activity
         if (cardDeck != null) {
             ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
         }
+        if (primaryDeck != null) {
+            ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+        }
+
     }
 
     /*
@@ -843,6 +1148,10 @@ public class MainActivity extends Activity
 
         // broadcast our new score to our peers
         broadcastScore(false);
+        sendCardDeckToAllParticipants();
+        sendMyCardsToAllParticipants();
+        sendPrimaryDeckToAllParticipants();
+
     }
 
     /*
@@ -868,25 +1177,36 @@ public class MainActivity extends Activity
         if ((int) buf[0] == 0) {
             cardDeck = fromGson(buf, 5, buf.length, DATA_TYPE_CARD_DECK);
             Log.d(TAG, "[onRealTimeMessageReceived] - cardDeck " + cardDeck.jp);
+            if (cardDeck != null) {
+                ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+            }
 
-            updateCardDeck();
+            //  updateCardDeck();
         }
         // Owner create the cards for all participant. needs to save it on Mycards.
         else if ((int) buf[0] == 1) {
             mParticipantCards = fromGson(buf, 5, buf.length, DATA_TYPE_M_PARTICIPANT_CARDS);
             myCards = mParticipantCards.containsKey(mMyId) ? mParticipantCards.get(mMyId) : null;
-            Log.d(TAG, "mycards after" + myCards);
+            Log.d(TAG, "[onRealTimeMessageReceived] -mycards after" + myCards);
             updateTurnUi();
         }
         // When participant finish to play
         else if ((int) buf[0] == 2) {
+
             mParticipantCards.put(sender, (Vector<Card>) fromGson(buf, 5, buf.length, DATA_TYPE_MY_CARDS));
+            Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished is turn, is new cards:" + mParticipantCards.get(sender));
+            updatePeerScoresDisplay();  //temp - needs to update ONLY the sender.
             updateParticipantUI(sender);
+            //  updateCardDeck();
         }
         // take from 0-primary 1-deck           take from the primary or deck (and update in each screen)
         // Cards he take (only if 0)
-        else if ((int) buf[0] == 3) {
-
+        else if ((int) buf[0] == 5) {
+            primaryDeck = fromGson(buf, 5, buf.length, DATA_TYPE_PRIMARY_DECK);
+            Log.d(TAG, "[onRealTimeMessageReceived] - primaryDeck " + primaryDeck);
+            if (primaryDeck != null) {
+                ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+            }
         }
         // Regular messages to change the turn.
         else {
@@ -894,6 +1214,7 @@ public class MainActivity extends Activity
             turn = (int) buf[3];
             tv.setText("" + turn);
             updateTurnUi();
+            Log.d(TAG, "[onRealTimeMessageReceived] - regular message ");
 
             if (buf[1] == 'F' || buf[1] == 'U') {
                 // score update.
@@ -913,7 +1234,7 @@ public class MainActivity extends Activity
 
 
                 turn = (int) buf[3];
-
+                lastDropType = (int) buf[4];
                 // update the scores on the screen
                 updatePeerScoresDisplay();
 
@@ -923,6 +1244,8 @@ public class MainActivity extends Activity
                     mFinishedParticipants.add(rtm.getSenderParticipantId());
                 }
             }
+            //    updateCardDeck();
+
         }
 
     }
@@ -963,6 +1286,7 @@ public class MainActivity extends Activity
 
         mMsgBuf[3] = (byte) (turn);
         Log.d(TAG, "turn= " + turn + " mMsgBuf[3]=" + mMsgBuf[3]);
+        mMsgBuf[4] = (byte) (myLastDropType);
 
         tv.setText("" + turn);
         // Send to every other participant.
@@ -1091,6 +1415,12 @@ public class MainActivity extends Activity
         for (; i < arr.length; ++i) {
             ((TextView) findViewById(arr[i])).setText("");
         }
+        if (cardDeck != null) {
+            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        }
+        if (primaryDeck != null) {
+            ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+        }
     }
 
     /*
@@ -1120,19 +1450,13 @@ public class MainActivity extends Activity
         if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
             ((TextView) findViewById(R.id.button_click_me)).setText("Wait for your turn");
             findViewById(R.id.button_click_me).setEnabled(false);
-            findViewById(R.id.drop_cards).setVisibility(View.GONE);
-
             ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
-
             updatePeerScoresDisplay();
             return false;
         } else {
             findViewById(R.id.button_click_me).setEnabled(true);
             ((TextView) findViewById(R.id.button_click_me)).setText("Play");
-            findViewById(R.id.drop_cards).setVisibility(View.VISIBLE);
-
             ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards);
-
             return true;
         }
     }
@@ -1208,6 +1532,7 @@ public class MainActivity extends Activity
     public void updateCardDeck() {
 
         ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck);
 
     }
 
@@ -1241,15 +1566,51 @@ public class MainActivity extends Activity
         }
     }
 
+    public int[] takeFrom() {
+        Log.d(TAG, "takeFrom() called ");
+        String[] splitString = takeCardEditText.getText().toString().split(",");
+        Log.d(TAG, "takeFrom() - splitString[]: " + Arrays.toString(splitString));
+
+        int[] split = tokensStringToInt(splitString);
+        Log.d(TAG, "takeFrom() - splitInt[]: " + Arrays.toString(split));
+        if (split == invalidDrop || split.length == 0 || split.length > 1 || split[0] > 1 || split[0] < 0) {
+            Log.d(TAG, "invalidInput - Enter 0 to take the card from the Primary Deck or 1 from the Card Deck, Try Again");
+            Toast.makeText(this, "You enter illegal paramater to take, Try again. ",
+                    Toast.LENGTH_LONG).show();
+            return invalidDrop;
+        }
+        return split;
+    }
+    public int[] takeFromLastDrop() {
+        Log.d(TAG, "takeFromLastDrop() called ");
+        String[] splitString = takeCardEditText.getText().toString().split(",");
+        Log.d(TAG, "takeFromLastDrop() - splitString[]: " + Arrays.toString(splitString));
+
+        int[] split = tokensStringToInt(splitString);
+        Log.d(TAG, "takeFromLastDrop() - splitInt[]: " + Arrays.toString(split));
+        if (split == invalidDrop || split.length == 0 || split.length > 1 || split[0] > 1 || split[0] < 0) {
+            Log.d(TAG, "invalidInput - Enter 0 to take the card from the Primary Deck or 1 from the Card Deck, Try Again");
+            Toast.makeText(this, "You enter illegal paramater to take, Try again. ",
+                    Toast.LENGTH_LONG).show();
+            return invalidDrop;
+        }
+        return split;
+    }
     public int[] dropCards(Stack<ArrayList<Card>> primaryPot) {
+        Log.d(TAG, "dropCards() called ");
 
       /*  System.out.println("Primary Pot: " + primaryPot.peek());
         System.out.println(name + " Cards: " + cards + " [sum: " + sum + "]");
         System.out.print("Enter the index's of cards to drop (with ',' between each index): ");*/
-        String[] splitString = ((EditText)(findViewById(R.id.drop_cards))).getText().toString().split(",");
+        String[] splitString = dropCardsEditText.getText().toString().split(",");//((EditText) (findViewById(R.id.terminalDropCards))).getText().toString().split(",");
+        Log.d(TAG, "dropCards() - splitString[]: " + Arrays.toString(splitString));
+
         int[] split = tokensStringToInt(splitString);
-        if (split==invalidDrop){
-            System.out.println("## You enter illegal cards to drop, Try again. ");
+        Log.d(TAG, "dropCards() - splitInt[]: " + Arrays.toString(split));
+
+        if (split == invalidDrop) {
+            Log.d(TAG, "invalidDrop - Try Again");
+
             Toast.makeText(this, "You enter illegal cards to drop, Try again. ",
                     Toast.LENGTH_LONG).show();
           /*  splitString = popEditText().split(",");
@@ -1258,16 +1619,19 @@ public class MainActivity extends Activity
             return invalidDrop;
         }
         int CVD = checkVaildDrop(split);
+        Log.d(TAG, "CVD: " + CVD);
+
         while (CVD == 0) {
-            System.out.println("## You enter illegal cards to drop, Try again. ");
-            Toast.makeText(this, "You enter illegal cards to drop, Try again. ",
+            Log.d(TAG, "CVD=0 - Try Again");
+
+            Toast.makeText(this, "CVD: You enter illegal cards to drop, Try again. ",
                     Toast.LENGTH_LONG).show();
           /*  splitString = popEditText().split(",");
             split = tokensStringToInt(splitString);
             CVD = checkVaildDrop(split);*/
-          return invalidDrop;
+            return invalidDrop;
         }
-        this.lastDropType = CVD;
+        this.myLastDropType = CVD;
         return split;
     }
 
@@ -1275,6 +1639,9 @@ public class MainActivity extends Activity
     private int checkVaildDrop(int[] split) {
         //return 0 - not vaild, 1 - one card, 2 - equal cards, 3- orderd cards
         if (split.length == 1) { // Checking if there is only 1 card
+            if (split[0] > myCards.size() - 1) {
+                return 0;
+            }
             return 1;
         } else {
             for (int i = 0; i < split.length; i++) {
@@ -1379,9 +1746,9 @@ public class MainActivity extends Activity
     private int[] tokensStringToInt(String[] Tokens) {
         int[] integerTokens = new int[Tokens.length];
         for (int i = 0; i < Tokens.length; i++) {
-            try{
+            try {
                 integerTokens[i] = Integer.parseInt(Tokens[i]);
-            }catch(NumberFormatException ex){ // handle your exception
+            } catch (NumberFormatException ex) { // handle your exception
 
                 return invalidDrop;
             }
@@ -1390,7 +1757,7 @@ public class MainActivity extends Activity
     }
 
     public int checkYanivOpportunity() {
-        if (mySum < 6) {
+        if (mySum <= yanivMinScore) {
             return declareYaniv();
         }
         return 0;
@@ -1400,9 +1767,115 @@ public class MainActivity extends Activity
         return 0;
     }
 
-    public int takeFrom() { // Ask if to take from primaryjackpot or jack[ppt
+    /*
+        private void takeFromPrimaryDeck(int[] split) {
+            ArrayList<Card> lastDrop = new ArrayList<Card>();
+            lastDrop = primaryDeck.pop();
+            Card pop = lastDrop.get(0);
+            boolean bool = false;
+            if (lastDropType == 1) {
+                pop = lastDrop.remove(0);
+            } else if (lastDropType == 2) { //case equal
+                System.out.println("# Enter a vaild index of card to take from the last drop:");
+                int n;
+                while (bool == false) {
+                    Scanner reader2 = new Scanner(System.in);
+                    n = reader2.nextInt();
+                    if (n >= 0 && n <= lastDrop.size() - 1) {
+                        pop = lastDrop.remove(n);
+                        bool = true;
+                    } else {
+                        System.out.println("## You enter illegal card to take, Try again. ");
+                    }
+                }
+            } else {    // case order
+                System.out.println("# Enter a vaild index of card to take from the last drop:");
+                while (bool == false) {
+                    Scanner reader2 = new Scanner(System.in);
+                    int n = reader2.nextInt();
+                    if (n == 0 || n == lastDrop.size() - 1) {
+                        pop = lastDrop.remove(n);
+                        bool = true;
+                    } else {
+                        System.out.println("## You enter illegal card to take, Try again. ");
+                    }
+                }
 
-        return 1;
+            }
+            primaryPot.add(lastDrop);
+
+            ArrayList<Card> myDrop = new ArrayList<Card>();
+
+            for (int i = 0; i < split.length; i++) {
+                int card = split[i];
+                myDrop.add(players[num].cards.get(card));
+            }
+            for (int i = 0; i < myDrop.size(); i++) {
+                players[num].cards.remove(myDrop.get(i));
+            }
+
+            primaryPot.add(myDrop);
+            wait(waitTime);
+            System.out.println("You got from the Primary Pot: " + pop.toString());
+
+            players[num].cards.add(pop);
+            players[num].calculateSum();
+
+            System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
+            wait(waitTime);
+        }
+
+        private void takeFromCardDeck(int[] split) {
+         /*   if (c.getSize() == 0) {
+                suffleJackPot();
+            }*/
+     /*   Card pop = cardDeck.jp.remove(0);
+        ArrayList<Card> myDrop = new ArrayList<Card>();
+        for (int i = 0; i < split.length; i++) {
+            int card = split[i];
+            myDrop.add(myCards.get(card));
+        }
+        for (int i = 0; i < myDrop.size(); i++) {
+            myCards.remove(myDrop.get(i));
+        }
+        primaryDeck.add(myDrop);
+        System.out.println("You got from the JackPot: " + pop.toString());
+        myCards.add(pop);
+       calculateSum();
+
+        System.out.println("Your new Cards:  " + myCards + " [sum: " + mySum+ "]");
+
+    }
+*/
+    public String getMyCardsWithVal() {
+        String ans = "";
+        for (int i = 0; i < myCards.size(); i++) {
+            ans += "" + i + "-[" + myCards.get(i) + "] ";
+        }
+        return ans;
     }
 
+    public String getPopPrimaryDeckCardWithVal() {
+        String ans = "";
+        if (primaryDeck == null) {
+            Log.d(TAG, "primaryDeck=null !!!!!!");
+
+        } else {
+            Log.d(TAG, "primaryDeck=" + primaryDeck.toString());
+
+        }
+
+        if (lastDropType == 1) {
+            ans = "" + 0 + "-[" + (primaryDeck.peek().get((0)) + "] ");
+
+        } else if (lastDropType == 2) {
+            for (int i = 0; i < primaryDeck.peek().size(); i++) {
+                ans += "" + i + "-[" + primaryDeck.peek().get(i) + "] ";
+            }
+        } else {
+            ans += "" + 0 + "-[" + (primaryDeck.peek().get((0)) + "] ");
+            ans += "" + (primaryDeck.peek().size() - 1) + "-[" + (primaryDeck.peek().get((primaryDeck.peek().size() - 1)) + "] ");
+        }
+        return ans;
+    }
 }

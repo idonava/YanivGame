@@ -166,15 +166,12 @@
             android:layout_weight="1"
             android:text="Card Deck" />
 
-        <EditText
-            android:id="@+id/drop_cards"
+        <TextView
+            android:id="@+id/primary_deck"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ems="10"
-            android:hint="Choose cards to drop"
-            android:inputType="text"
-            android:textSize="14sp" />
+            android:text="Card Deck" />
 
         <TextView
             android:id="@+id/owner"
