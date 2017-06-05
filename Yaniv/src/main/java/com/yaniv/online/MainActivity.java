@@ -69,6 +69,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Vector;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity
@@ -174,7 +175,7 @@ public class MainActivity extends Activity
     //Participant objects
     private Vector<Card> myCards;
     private int mySum;
-    private int lastDropType;
+    private int lastDropType = 1;
     private int myLastDropType;
     // private Vector<Vector<Card>> participantsCards = null;
     private int[] invalidDrop = {999};
@@ -320,6 +321,17 @@ public class MainActivity extends Activity
         Log.d(TAG, "takeCardsDialog_2.");
         final ArrayList<Card> myDrop = new ArrayList<Card>();
 
+        for (int i = 0; i < dropCards.length; i++) {
+
+            int card = dropCards[i];
+            myDrop.add(myCards.get(card));
+            Log.d(TAG, "Dropping: " + dropCards[i] + " sym: " + myDrop.get(i));
+
+        }
+        for (int i = 0; i < myDrop.size(); i++) {
+            myCards.remove(myDrop.get(i));
+        }
+        Log.d(TAG, "1. primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
         //Taking card from the card deck
         if (takingCard[0] == 1) {
             //Needs to do that later
@@ -327,101 +339,84 @@ public class MainActivity extends Activity
                 suffleJackPot();
             }
             */
+
+
+            //   System.out.println("You got from the JackPot: " + pop.toString());
+
+            ArrayList<Card> lastDrop = primaryDeck.pop();
             Card pop = cardDeck.jp.remove(0);
-
-            for (int i = 0; i < dropCards.length; i++) {
-
-                int card = dropCards[i];
-                myDrop.add(myCards.get(card));
-                Log.d(TAG, "Dropping: " + dropCards[i] + " sym: " + myDrop.get(i));
-
-            }
-            for (int i = 0; i < myDrop.size(); i++) {
-                myCards.remove(myDrop.get(i));
-            }
-            Log.d(TAG, "primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString());
-
-         //   System.out.println("You got from the JackPot: " + pop.toString());
             myCards.add(pop);
+            primaryDeck.add(myDrop);
+
             calculateSum();
-        //    scoreOnePoint();
+            //    scoreOnePoint();
 
             //    System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
         } else {
-            takeCardEditText = new EditText(this);
+            Log.d(TAG, "2.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
 
-            final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setView(takeCardEditText);
+            if (lastDropType == 1) {
+                ArrayList<Card> lastDrop = primaryDeck.pop();
+                Card pop = lastDrop.remove(0);
+                primaryDeck.add(lastDrop);
+                myCards.add(pop);
+                primaryDeck.add(myDrop);
+                
+                Log.d(TAG, "2.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
 
-            builder.setMessage("Enter num for taking from the last drop\n" + getPopPrimaryDeckCardWithVal());
-            builder.setPositiveButton("Take!",
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Do nothing here because we override this button later to change the close behaviour.
-                            //However, we still need this because on older versions of Android unless we
-                            //pass a handler the button doesn't get instantiated
-                        }
-                    });
-            final AlertDialog dialog = builder.create();
-            dialog.show();
+
+            } else {
+                Log.d(TAG, "3.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+
+                takeCardEditText = new EditText(this);
+
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setView(takeCardEditText);
+
+                builder.setMessage("Enter num for taking from the last drop\n" + getPopPrimaryDeckCardWithVal());
+                builder.setPositiveButton("Take!",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //Do nothing here because we override this button later to change the close behaviour.
+                                //However, we still need this because on older versions of Android unless we
+                                //pass a handler the button doesn't get instantiated
+                            }
+                        });
+                final AlertDialog dialog = builder.create();
+                dialog.show();
 //Overriding the handler immediately after show is probably a better approach than OnShowListener as described below
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "[CHECK1] primarydeck: "+primaryDeck);
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //Asking the player which the cards to drop.
+                        takingCard = takeFromLastDrop();
+                        Card pop;
 
-                    ArrayList<Card> lastDrop = new ArrayList<Card>();
-                    Log.d(TAG, "primaryDeck=" + primaryDeck.toString());
-                    lastDrop = primaryDeck.pop();
-                    Log.d(TAG, "lastDrop=" + lastDrop.toString());
+                        if (takingCard == invalidDrop) {
+                            Log.d(TAG, "Invalid taking card parameter");
+                            builder.setMessage("Enter 0 for taking from Primary Deck OR 1 from the Card Deck\nINVALID PARAMETER");
+                            takeCardEditText.setText("");
+                        } else {
+                            ArrayList<Card> lastDrop = primaryDeck.pop();
+                            pop = lastDrop.remove(takingCard[0]);
+                            primaryDeck.add(lastDrop);
+                            myCards.add(pop);
+                            primaryDeck.add(myDrop);
 
-                    Card pop = lastDrop.get(0);
-                    boolean bool = false;
-                    if (lastDropType == 1) {
-                        pop = lastDrop.remove(0);
-                    } else if (lastDropType == 2) { //case equal
-                        System.out.println("# Enter a vaild index of card to take from the last drop:");
-                        int n;
-                        while (bool == false) {
-                            Scanner reader2 = new Scanner(System.in);
-                            n = reader2.nextInt();
-                            if (n >= 0 && n <= lastDrop.size() - 1) {
-                                pop = lastDrop.remove(n);
-                                bool = true;
-                            } else {
-                                System.out.println("## You enter illegal card to take, Try again. ");
-                            }
+                          //  scoreOnePoint();
+                            dialog.dismiss();
                         }
-                    } else {    // case order
-                        System.out.println("# Enter a vaild index of card to take from the last drop:");
-                        while (bool == false) {
-                            Scanner reader2 = new Scanner(System.in);
-                            int n = reader2.nextInt();
-                            if (n == 0 || n == lastDrop.size() - 1) {
-                                pop = lastDrop.remove(n);
-                                bool = true;
-                            } else {
-                                System.out.println("## You enter illegal card to take, Try again. ");
-                            }
-                        }
+
+                        Log.d(TAG, "3.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
 
                     }
-                    primaryDeck.add(lastDrop);
-                    myCards.add(pop);
-                    Log.d(TAG, "[CHECK2] primarydeck: "+primaryDeck);
-                    Log.d(TAG, "[CHECK2] myDrop: "+myDrop);
+                });
 
-                    dialog.dismiss();
-                }
-            });
-
-
+            }
         }
 
-        primaryDeck.add(myDrop);
         scoreOnePoint();
-
     }
 
     private void takeCardsDialog_1() {
@@ -883,12 +878,17 @@ public class MainActivity extends Activity
             return;
         }
         mySum = 0;
-        lastDropType = 0;
+        lastDropType = 1;
 
         updateRoom(room);
         //Create new suffle deck.
         if (owner) {
-            cardDeck = new Cards();
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+         //   cardDeck = new Cards();
             Log.d(TAG, "cards(: " + cardDeck.jp);
 
             //  createParticipantsCards();
@@ -1447,6 +1447,11 @@ public class MainActivity extends Activity
     }
 
     boolean updateTurnUi() {
+        Log.d(TAG, "updateTurnUi: mparti0: " + mParticipants.get(0).getParticipantId());
+        Log.d(TAG, "updateTurnUi: mpart1i: " + mParticipants.get(1).getParticipantId());
+        Log.d(TAG, "updateTurnUi: myid: " + mMyId);
+        Log.d(TAG, "updateTurnUi: turn: " + turn);
+
         if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
             ((TextView) findViewById(R.id.button_click_me)).setText("Wait for your turn");
             findViewById(R.id.button_click_me).setEnabled(false);
@@ -1581,21 +1586,51 @@ public class MainActivity extends Activity
         }
         return split;
     }
+
     public int[] takeFromLastDrop() {
         Log.d(TAG, "takeFromLastDrop() called ");
         String[] splitString = takeCardEditText.getText().toString().split(",");
-        Log.d(TAG, "takeFromLastDrop() - splitString[]: " + Arrays.toString(splitString));
-
         int[] split = tokensStringToInt(splitString);
+
+        Log.d(TAG, "takeFromLastDrop() - splitString[]: " + Arrays.toString(splitString));
+        Log.d(TAG, "primaryDeck=" + primaryDeck.toString());
+        ArrayList<Card> lastDrop = primaryDeck.peek();
+        Log.d(TAG, "lastDrop=" + lastDrop.toString());
+
         Log.d(TAG, "takeFromLastDrop() - splitInt[]: " + Arrays.toString(split));
-        if (split == invalidDrop || split.length == 0 || split.length > 1 || split[0] > 1 || split[0] < 0) {
+        if (split == invalidDrop || split.length != 1) {
             Log.d(TAG, "invalidInput - Enter 0 to take the card from the Primary Deck or 1 from the Card Deck, Try Again");
             Toast.makeText(this, "You enter illegal paramater to take, Try again. ",
                     Toast.LENGTH_LONG).show();
             return invalidDrop;
         }
+
+        //Taking card from 3 optional options to take.
+        if (lastDropType == 1) {    //case one card - taking the only one card are in primary deck.
+            if (split[0] >= 0 && split[0] <= lastDrop.size() - 1) {
+
+            } else {
+                return invalidDrop;
+            }
+
+        } else if (lastDropType == 2) { //case equal
+            if (split[0] >= 0 && split[0] <= lastDrop.size() - 1) {
+
+            } else {
+                return invalidDrop;
+            }
+        } else {   //case order
+            if (split[0] == 0 || split[0] == lastDrop.size() - 1) {
+
+            } else {
+                return invalidDrop;
+            }
+
+
+        }
         return split;
     }
+
     public int[] dropCards(Stack<ArrayList<Card>> primaryPot) {
         Log.d(TAG, "dropCards() called ");
 
