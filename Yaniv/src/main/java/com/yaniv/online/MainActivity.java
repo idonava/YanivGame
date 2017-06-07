@@ -348,7 +348,6 @@ public class MainActivity extends Activity
             myCards.add(pop);
             primaryDeck.add(myDrop);
 
-            calculateSum();
             scoreOnePoint();
 
             //    scoreOnePoint();
@@ -419,6 +418,7 @@ public class MainActivity extends Activity
 
             }
         }
+    //    calculateSum();
 
     }
 
@@ -951,6 +951,7 @@ public class MainActivity extends Activity
 
     private void sendParticipantsCardsToAllParticipants() {
         Log.d(TAG, "sendParticipantsCardsToAllParticipants() ");
+        calculateSum();
 
         byte[] b = new byte[0];
         try {
@@ -994,6 +995,7 @@ public class MainActivity extends Activity
         for (int j = 0; j < 5; j++) {
             myCards.add(cardDeck.jp.remove(0));
         }
+
         mParticipantCards.put(mMyId, myCards);
         for (Participant p : mParticipants) {
             if (p.getParticipantId().equals(mMyId))
@@ -1156,6 +1158,8 @@ public class MainActivity extends Activity
         if (mSecondsLeft <= 0)
             return; // too late!
         ++mScore;
+        calculateSum();
+
         updateScoreDisplay();
         updatePeerScoresDisplay();
 
@@ -1200,6 +1204,8 @@ public class MainActivity extends Activity
         else if ((int) buf[0] == 1) {
             mParticipantCards = fromGson(buf, 5, buf.length, DATA_TYPE_M_PARTICIPANT_CARDS);
             myCards = mParticipantCards.containsKey(mMyId) ? mParticipantCards.get(mMyId) : null;
+            calculateSum();
+
             Log.d(TAG, "[onRealTimeMessageReceived] -mycards after" + myCards);
             updateTurnUi();
         }
@@ -1390,11 +1396,12 @@ public class MainActivity extends Activity
 
     // updates the screen with the scores from our peers
     void updatePeerScoresDisplay() {
+
         if (isTurn(mMyId)) {
-            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards);
+            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards +" ["+mySum+"]");
 
         } else {
-            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
+            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards +" ["+mySum+"]");
 
         }
         int[] arr = {
