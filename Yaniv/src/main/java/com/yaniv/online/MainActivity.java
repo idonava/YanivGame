@@ -349,6 +349,8 @@ public class MainActivity extends Activity
             primaryDeck.add(myDrop);
 
             calculateSum();
+            scoreOnePoint();
+
             //    scoreOnePoint();
 
             //    System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
@@ -363,6 +365,7 @@ public class MainActivity extends Activity
                 primaryDeck.add(myDrop);
                 
                 Log.d(TAG, "2.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+                scoreOnePoint();
 
 
             } else {
@@ -409,6 +412,7 @@ public class MainActivity extends Activity
                         }
 
                         Log.d(TAG, "3.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+                        scoreOnePoint();
 
                     }
                 });
@@ -416,7 +420,6 @@ public class MainActivity extends Activity
             }
         }
 
-        scoreOnePoint();
     }
 
     private void takeCardsDialog_1() {
@@ -907,6 +910,9 @@ public class MainActivity extends Activity
     }
 
     private void sendPrimaryDeckToAllParticipants() {
+        Log.d(TAG, "sendPrimaryDeckToAllParticipants() " + primaryDeck);
+
+
         byte[] b = new byte[0];
 
         try {
@@ -925,6 +931,8 @@ public class MainActivity extends Activity
     }
 
     private void sendMyCardsToAllParticipants() {
+        Log.d(TAG, "sendMyCardsToAllParticipants() " + myCards);
+
         byte[] b = new byte[0];
 
         try {
@@ -942,6 +950,8 @@ public class MainActivity extends Activity
     }
 
     private void sendParticipantsCardsToAllParticipants() {
+        Log.d(TAG, "sendParticipantsCardsToAllParticipants() ");
+
         byte[] b = new byte[0];
         try {
             b = toGson(mParticipantCards, DATA_TYPE_M_PARTICIPANT_CARDS);
@@ -958,6 +968,8 @@ public class MainActivity extends Activity
     }
 
     private void sendCardDeckToAllParticipants() {
+        Log.d(TAG, "sendCardDeckToAllParticipants() ");
+
         byte[] b = new byte[0];
 
         try {
@@ -977,6 +989,7 @@ public class MainActivity extends Activity
 
 
     private void createParticipantsCards() {
+        Log.d(TAG, "createParticipantsCards() ");
 
         for (int j = 0; j < 5; j++) {
             myCards.add(cardDeck.jp.remove(0));
