@@ -26,6 +26,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -122,6 +123,10 @@ public class MainActivity extends Activity
     // invitation listener
     String mIncomingInvitationId = null;
 
+    int cardsID[] = {R.id.my_card_1, R.id.my_card_2, R.id.my_card_3, R.id.my_card_4, R.id.my_card_5};
+    int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
+
+
     // cell[0] cell[X]                         WHAT AND WHO                                                        EXPLAIN
     //  TYPE
     //   0	    1	Owner in the initial of the game. Anybody on the game when cards over.	Shuffle the cards and resend them on cell 1. Evreybody needs to load the new cards!
@@ -183,6 +188,7 @@ public class MainActivity extends Activity
     private int[] takingCard;
     EditText dropCardsEditText;
     EditText takeCardEditText;
+    Map<String, Integer> cardsDrawable = new HashMap<String, Integer>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -201,6 +207,7 @@ public class MainActivity extends Activity
             findViewById(id).setOnClickListener(this);
         }
         tv = (TextView) findViewById(R.id.turn);
+        initialCardsDrawable();
     }
 
     @Override
@@ -331,7 +338,7 @@ public class MainActivity extends Activity
         for (int i = 0; i < myDrop.size(); i++) {
             myCards.remove(myDrop.get(i));
         }
-        Log.d(TAG, "1. primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+        Log.d(TAG, "1. primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: " + Arrays.toString(dropCards));
         //Taking card from the card deck
         if (takingCard[0] == 1) {
             //Needs to do that later
@@ -354,7 +361,7 @@ public class MainActivity extends Activity
 
             //    System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
         } else {
-            Log.d(TAG, "2.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+            Log.d(TAG, "2.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: " + Arrays.toString(dropCards));
 
             if (lastDropType == 1) {
                 ArrayList<Card> lastDrop = primaryDeck.pop();
@@ -362,13 +369,13 @@ public class MainActivity extends Activity
                 primaryDeck.add(lastDrop);
                 myCards.add(pop);
                 primaryDeck.add(myDrop);
-                
-                Log.d(TAG, "2.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+
+                Log.d(TAG, "2.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: " + Arrays.toString(dropCards));
                 scoreOnePoint();
 
 
             } else {
-                Log.d(TAG, "3.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+                Log.d(TAG, "3.1 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: " + Arrays.toString(dropCards));
 
                 takeCardEditText = new EditText(this);
 
@@ -406,11 +413,11 @@ public class MainActivity extends Activity
                             myCards.add(pop);
                             primaryDeck.add(myDrop);
 
-                          //  scoreOnePoint();
+                            //  scoreOnePoint();
                             dialog.dismiss();
                         }
 
-                        Log.d(TAG, "3.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: "+Arrays.toString(dropCards));
+                        Log.d(TAG, "3.2 primaryDeck: " + primaryDeck.toString() + " myDrop: " + myDrop.toString() + "dropCards: " + Arrays.toString(dropCards));
                         scoreOnePoint();
 
                     }
@@ -418,7 +425,7 @@ public class MainActivity extends Activity
 
             }
         }
-    //    calculateSum();
+        //    calculateSum();
 
     }
 
@@ -891,7 +898,7 @@ public class MainActivity extends Activity
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-         //   cardDeck = new Cards();
+            //   cardDeck = new Cards();
             Log.d(TAG, "cards(: " + cardDeck.jp);
 
             //  createParticipantsCards();
@@ -926,8 +933,8 @@ public class MainActivity extends Activity
             sendMsg[5 + i] = b[i];
         }
         messageToAllParticipants(sendMsg, true);
-
-        ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+        updatePrimaryDeckUI();
+        //((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
     }
 
     private void sendMyCardsToAllParticipants() {
@@ -985,7 +992,7 @@ public class MainActivity extends Activity
         }
         messageToAllParticipants(sendMsg, true);
 
-        ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        //   ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
     }
 
 
@@ -1086,10 +1093,10 @@ public class MainActivity extends Activity
             updatePeerScoresDisplay();
         }
         if (cardDeck != null) {
-            ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+            //     ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
         }
         if (primaryDeck != null) {
-            ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+            //   ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
         }
 
     }
@@ -1195,7 +1202,7 @@ public class MainActivity extends Activity
             cardDeck = fromGson(buf, 5, buf.length, DATA_TYPE_CARD_DECK);
             Log.d(TAG, "[onRealTimeMessageReceived] - cardDeck " + cardDeck.jp);
             if (cardDeck != null) {
-                ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+                // ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
             }
 
             //  updateCardDeck();
@@ -1224,7 +1231,8 @@ public class MainActivity extends Activity
             primaryDeck = fromGson(buf, 5, buf.length, DATA_TYPE_PRIMARY_DECK);
             Log.d(TAG, "[onRealTimeMessageReceived] - primaryDeck " + primaryDeck);
             if (primaryDeck != null) {
-                ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+                //  ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
+                updatePrimaryDeckUI();
             }
         }
         // Regular messages to change the turn.
@@ -1267,6 +1275,23 @@ public class MainActivity extends Activity
 
         }
 
+    }
+
+    private void updatePrimaryDeckUI() {
+        int i;
+        ImageView myCard;
+        ArrayList<Card> peek = primaryDeck.peek();
+        for (i = 0; i < peek.size(); i++) {
+            int drawable = cardsDrawable.get("" + peek.get(i).getKey());
+            myCard = (ImageView) findViewById(droppedID[i]);
+            myCard.setImageResource(drawable);
+            myCard.setVisibility(View.VISIBLE);
+
+        }
+        for (; i < 5; i++) {
+            myCard = (ImageView) findViewById(droppedID[i]);
+            myCard.setVisibility(View.GONE);
+        }
     }
 
 
@@ -1383,7 +1408,7 @@ public class MainActivity extends Activity
 
     // updates the label that shows my score
     void updateScoreDisplay() {
-        ((TextView) findViewById(R.id.my_score)).setText(formatScore(mScore));
+        //  ((TextView) findViewById(R.id.my_score)).setText(formatScore(mScore));
     }
 
     // formats a score as a three-digit number
@@ -1396,12 +1421,12 @@ public class MainActivity extends Activity
 
     // updates the screen with the scores from our peers
     void updatePeerScoresDisplay() {
-
+/*
         if (isTurn(mMyId)) {
-            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards +" ["+mySum+"]");
+            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards + " [" + mySum + "]");
 
         } else {
-            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards +" ["+mySum+"]");
+            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards + " [" + mySum + "]");
 
         }
         int[] arr = {
@@ -1441,6 +1466,7 @@ public class MainActivity extends Activity
         if (primaryDeck != null) {
             ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
         }
+        */
     }
 
     /*
@@ -1469,9 +1495,13 @@ public class MainActivity extends Activity
     boolean updateTurnUi() {
         Log.d(TAG, "updateTurnUi: mparti0: " + mParticipants.get(0).getParticipantId());
         Log.d(TAG, "updateTurnUi: mpart1i: " + mParticipants.get(1).getParticipantId());
+        Log.d(TAG, "updateTurnUi: mpart0icards: " + mParticipantCards.get(mParticipants.get(0).getParticipantId()));
+        Log.d(TAG, "updateTurnUi: mpart1icards: " + mParticipantCards.get(mParticipants.get(1).getParticipantId()));
+
         Log.d(TAG, "updateTurnUi: myid: " + mMyId);
         Log.d(TAG, "updateTurnUi: turn: " + turn);
-
+        updateMyUI();
+/*
         if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
             ((TextView) findViewById(R.id.button_click_me)).setText("Wait for your turn");
             findViewById(R.id.button_click_me).setEnabled(false);
@@ -1484,7 +1514,10 @@ public class MainActivity extends Activity
             ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards);
             return true;
         }
+        */
+        return true;
     }
+
 
     boolean isTurn(String participant) {
         if (!mParticipants.get(turn).getParticipantId().equals(participant)) {
@@ -1522,7 +1555,7 @@ public class MainActivity extends Activity
     //Owner Functions
     //First Initial
     void ownerInitial() {
-        ((TextView) findViewById(R.id.owner)).setText("owner");
+        //((TextView) findViewById(R.id.owner)).setText("owner");
 
         this.cardDeck = new Cards();
         this.primaryDeck = new Stack<>();
@@ -1541,13 +1574,25 @@ public class MainActivity extends Activity
     }
 
     public void updateMyUI() {
-        if (isTurn(mMyId)) {
-            //    ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards);
-
-        } else {
-            //   ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
+        int i;
+        ImageView myCard;
+        for (i = 0; i < myCards.size(); i++) {
+            int drawable = cardsDrawable.get("" + myCards.get(i).getKey());
+            myCard = (ImageView) findViewById(cardsID[i]);
+            myCard.setImageResource(drawable);
+            myCard.setVisibility(View.VISIBLE);
 
         }
+        for (; i < 5; i++) {
+            myCard = (ImageView) findViewById(cardsID[i]);
+            myCard.setVisibility(View.GONE);
+        }
+        //     myCard = (ImageView) findViewById(cardsID[0]);
+        //   myCard.setImageResource(R.drawable.c_2_of_diamonds);
+   /*     Log.d(TAG, "int_resource: " + this.getResources().getIdentifier("drawable/" + myCards.get(0).getResourceName(), "drawable", getPackageName()));
+        Log.d(TAG, "int_arr: " + cardsID[0]);
+        Log.d(TAG, ": " + myCards.get(0).getResourceName());*/
+
     }
 
     public void updateParticipantUI(String pid) {
@@ -1556,8 +1601,8 @@ public class MainActivity extends Activity
 
     public void updateCardDeck() {
 
-        ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
-        ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck);
+        //   ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
+        //  ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck);
 
     }
 
@@ -1932,5 +1977,95 @@ public class MainActivity extends Activity
             ans += "" + (primaryDeck.peek().size() - 1) + "-[" + (primaryDeck.peek().get((primaryDeck.peek().size() - 1)) + "] ");
         }
         return ans;
+    }
+
+    public void initialCardsDrawable() {
+        char hearts = '\u2764'; //hearts
+        char spades = '\u2660'; //spades
+        char diamonds = '\u2666'; //diamonds
+        char clubs = '\u2663'; //clubs
+        char joker = '\u2668'; //joker
+
+        cardsDrawable.put("" + 1 + clubs, R.drawable.c_1_of_clubs); //clubs
+        cardsDrawable.put("" + 1 + diamonds, R.drawable.c_1_of_diamonds); //diamonds
+        cardsDrawable.put("" + 1 + hearts, R.drawable.c_1_of_hearts); //hearts
+        cardsDrawable.put("" + 1 + spades, R.drawable.c_1_of_spades); //spades
+
+        cardsDrawable.put("" + 2 + clubs, R.drawable.c_2_of_clubs); //clubs
+        cardsDrawable.put("" + 2 + diamonds, R.drawable.c_2_of_diamonds); //diamonds
+        cardsDrawable.put("" + 2 + hearts, R.drawable.c_2_of_hearts); //hearts
+        cardsDrawable.put("" + 2 + spades, R.drawable.c_2_of_spades); //spades
+
+        cardsDrawable.put("" + 3 + clubs, R.drawable.c_3_of_clubs); //clubs
+        cardsDrawable.put("" + 3 + diamonds, R.drawable.c_3_of_diamonds); //diamonds
+        cardsDrawable.put("" + 3 + hearts, R.drawable.c_3_of_hearts); //hearts
+        cardsDrawable.put("" + 3 + spades, R.drawable.c_3_of_spades); //spades
+
+        cardsDrawable.put("" + 4 + clubs, R.drawable.c_4_of_clubs); //clubs
+        cardsDrawable.put("" + 4 + diamonds, R.drawable.c_4_of_diamonds); //diamonds
+        cardsDrawable.put("" + 4 + hearts, R.drawable.c_4_of_hearts); //hearts
+        cardsDrawable.put("" + 4 + spades, R.drawable.c_4_of_spades); //spades
+
+        cardsDrawable.put("" + 5 + clubs, R.drawable.c_5_of_clubs); //clubs
+        cardsDrawable.put("" + 5 + diamonds, R.drawable.c_5_of_diamonds); //diamonds
+        cardsDrawable.put("" + 5 + hearts, R.drawable.c_5_of_hearts); //hearts
+        cardsDrawable.put("" + 5 + spades, R.drawable.c_5_of_spades); //spades
+
+        cardsDrawable.put("" + 6 + clubs, R.drawable.c_6_of_clubs); //clubs
+        cardsDrawable.put("" + 6 + diamonds, R.drawable.c_6_of_diamonds); //diamonds
+        cardsDrawable.put("" + 6 + hearts, R.drawable.c_6_of_hearts); //hearts
+        cardsDrawable.put("" + 6 + spades, R.drawable.c_6_of_spades); //spades
+
+        cardsDrawable.put("" + 7 + clubs, R.drawable.c_7_of_clubs); //clubs
+        cardsDrawable.put("" + 7 + diamonds, R.drawable.c_7_of_diamonds); //diamonds
+        cardsDrawable.put("" + 7 + hearts, R.drawable.c_7_of_hearts); //hearts
+        cardsDrawable.put("" + 7 + spades, R.drawable.c_7_of_spades); //spades
+
+        cardsDrawable.put("" + 8 + clubs, R.drawable.c_8_of_clubs); //clubs
+        cardsDrawable.put("" + 8 + diamonds, R.drawable.c_8_of_diamonds); //diamonds
+        cardsDrawable.put("" + 8 + hearts, R.drawable.c_8_of_hearts); //hearts
+        cardsDrawable.put("" + 8 + spades, R.drawable.c_8_of_spades); //spades
+
+        cardsDrawable.put("" + 9 + clubs, R.drawable.c_9_of_clubs); //clubs
+        cardsDrawable.put("" + 9 + diamonds, R.drawable.c_9_of_diamonds); //diamonds
+        cardsDrawable.put("" + 9 + hearts, R.drawable.c_9_of_hearts); //hearts
+        cardsDrawable.put("" + 9 + spades, R.drawable.c_9_of_spades); //spades
+
+        cardsDrawable.put("" + 10 + clubs, R.drawable.c_10_of_clubs); //clubs
+        cardsDrawable.put("" + 10 + diamonds, R.drawable.c_10_of_diamonds); //diamonds
+        cardsDrawable.put("" + 10 + hearts, R.drawable.c_10_of_hearts); //hearts
+        cardsDrawable.put("" + 10 + spades, R.drawable.c_10_of_spades); //spades
+
+        cardsDrawable.put("" + 11 + clubs, R.drawable.c_11_of_clubs); //clubs
+        cardsDrawable.put("" + 11 + diamonds, R.drawable.c_11_of_diamonds); //diamonds
+        cardsDrawable.put("" + 11 + hearts, R.drawable.c_11_of_hearts); //hearts
+        cardsDrawable.put("" + 11 + spades, R.drawable.c_11_of_spades); //spades
+
+        cardsDrawable.put("" + 12 + clubs, R.drawable.c_12_of_clubs); //clubs
+        cardsDrawable.put("" + 12 + diamonds, R.drawable.c_12_of_diamonds); //diamonds
+        cardsDrawable.put("" + 12 + hearts, R.drawable.c_12_of_hearts); //hearts
+        cardsDrawable.put("" + 12 + spades, R.drawable.c_12_of_spades); //spades
+
+        cardsDrawable.put("" + 13 + clubs, R.drawable.c_13_of_clubs); //clubs
+        cardsDrawable.put("" + 13 + diamonds, R.drawable.c_13_of_diamonds); //diamonds
+        cardsDrawable.put("" + 13 + hearts, R.drawable.c_13_of_hearts); //hearts
+        cardsDrawable.put("" + 13 + spades, R.drawable.c_13_of_spades); //spades
+
+        cardsDrawable.put("" + 14 + joker, R.drawable.c_0_of_black); //joker1
+        cardsDrawable.put("" + 15 + joker, R.drawable.c_0_of_red); //joker2
+
+
+    }
+
+    public void myCard1OnClick(View view) {
+        view.setSelected(true);
+        if(view.isSelected()) {
+            int y = view.getTop();
+            view.setTop(y - 30);
+        }
+        else{
+            int y = view.getTop();
+            view.setTop(y + 30);
+        }
     }
 }
