@@ -165,7 +165,7 @@
                 android:layout_width="250dp"
                 android:layout_height="80dp"
                 android:layout_centerInParent="true"
-                android:onClick="goToMainMenu"
+                android:onClick="cardDeckOnClick"
                 android:src="@drawable/pile_1" />
 
             <LinearLayout
@@ -182,90 +182,121 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="goToMainMenu"
-                  />/  android:src="@drawable/c_1_of_clubs" />
+                    android:onClick="dropedCard1OnClick" />/  android:src="@drawable/c_1_of_clubs" />
 
                 <ImageView
                     android:id="@+id/dropped_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="goToMainMenu"
-                />/    android:src="@drawable/c_4_of_spades" />
+                    android:onClick="dropedCard2OnClick" />/    android:src="@drawable/c_4_of_spades" />
 
                 <ImageView
                     android:id="@+id/dropped_3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="goToMainMenu"
-                 />/   android:src="@drawable/c_8_of_clubs" />
+                    android:onClick="dropedCard3OnClick" /><![CDATA[/   android:src="@drawable/c_8_of_clubs" />
+
+                /    android:src="@drawable/c_5_of_diamonds" />
+
+                ]]>
 
                 <ImageView
                     android:id="@+id/dropped_4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="goToMainMenu"
-                />/    android:src="@drawable/c_5_of_diamonds" />
+                    android:onClick="dropedCard4OnClick" />
 
                 <ImageView
                     android:id="@+id/dropped_5"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="goToMainMenu"
-                />/    android:src="@drawable/c_12_of_diamonds" />
+                    android:onClick="dropedCard5OnClick" />/    android:src="@drawable/c_12_of_diamonds" />
             </LinearLayout>
         </RelativeLayout>
 
+        <TextView
+            android:id="@+id/my_drop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="false"
+            android:layout_alignParentRight="true"
+            android:text="mydrop" />
+
         <LinearLayout
-        android:id="@+id/myCardsLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:paddingBottom="10dip">
+            android:id="@+id/myCardsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="5dp"
+            android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/my_card_1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="myCard1Click"
-            />
+            <ImageView
+                android:id="@+id/my_card_1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:layout_weight="1"
+                android:onClick="myCard1OnClick"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp" />
 
-        <ImageView
-            android:id="@+id/my_card_2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-                android:onClick="goToMainMenu"
-              />/  android:src="@drawable/c_12_of_diamonds" />
+            <ImageView
+                android:id="@+id/my_card_2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:layout_weight="1"
+                android:onClick="myCard2OnClick"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp" /><![CDATA[/ android:src="@drawable/c_12_of_diamonds" />
+
+            / android:src="@drawable/c_6_of_spades" />
+
+            ]]>
 
             <ImageView
                 android:id="@+id/my_card_3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
-                android:onClick="goToMainMenu"
-             />/   android:src="@drawable/c_6_of_spades" />
+                android:onClick="myCard3OnClick"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp" />
 
             <ImageView
                 android:id="@+id/my_card_4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
-                android:onClick="goToMainMenu"
-            />/    android:src="@drawable/c_6_of_clubs" />
+                android:onClick="myCard4OnClick"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp" />/ android:src="@drawable/c_6_of_clubs" />
 
             <ImageView
                 android:id="@+id/my_card_5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
-                android:onClick="goToMainMenu"
-           />/     android:src="@drawable/c_4_of_hearts" />
+                android:onClick="myCard5OnClick"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp" />/ android:src="@drawable/c_4_of_hearts" />
         </LinearLayout>
 
         <LinearLayout

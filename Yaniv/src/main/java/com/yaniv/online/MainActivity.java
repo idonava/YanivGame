@@ -19,8 +19,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -126,6 +129,8 @@ public class MainActivity extends Activity
     int cardsID[] = {R.id.my_card_1, R.id.my_card_2, R.id.my_card_3, R.id.my_card_4, R.id.my_card_5};
     int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
 
+    Vector<Integer> myCardsDrop = new Vector<>();
+    Vector<Integer> fromDropCardsList = new Vector<>();
 
     // cell[0] cell[X]                         WHAT AND WHO                                                        EXPLAIN
     //  TYPE
@@ -1121,7 +1126,8 @@ public class MainActivity extends Activity
     // Start the gameplay phase of the game.
     void startGame(boolean multiplayer) {
         mMultiplayer = multiplayer;
-        updateScoreDisplay();
+        //    updateScoreDisplay();
+        updateMyUI();
         // broadcastScore(false);
         switchToScreen(R.id.screen_game);
 
@@ -1166,9 +1172,9 @@ public class MainActivity extends Activity
             return; // too late!
         ++mScore;
         calculateSum();
-
-        updateScoreDisplay();
-        updatePeerScoresDisplay();
+        updateMyUI();
+        // updateScoreDisplay();
+        //   updatePeerScoresDisplay();
 
         // broadcast our new score to our peers
         broadcastScore(false);
@@ -1421,19 +1427,37 @@ public class MainActivity extends Activity
 
     // updates the screen with the scores from our peers
     void updatePeerScoresDisplay() {
-/*
+        Log.d(TAG, "updatePeerScoresDisplay() ");
+
         if (isTurn(mMyId)) {
-            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards + " [" + mySum + "]");
-
+            (findViewById(R.id.my_card_1)).setClickable(true);
+            (findViewById(R.id.my_card_2)).setClickable(true);
+            (findViewById(R.id.my_card_3)).setClickable(true);
+            (findViewById(R.id.my_card_4)).setClickable(true);
+            (findViewById(R.id.my_card_5)).setClickable(true);
+            (findViewById(R.id.dropped_1)).setClickable(true);
+            (findViewById(R.id.dropped_3)).setClickable(true);
+            (findViewById(R.id.dropped_2)).setClickable(true);
+            (findViewById(R.id.dropped_4)).setClickable(true);
+            (findViewById(R.id.dropped_5)).setClickable(true);
+            (findViewById(R.id.deck_cards)).setClickable(true);
+            (findViewById(R.id.my_drop)).setVisibility(View.VISIBLE);
         } else {
-            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards + " [" + mySum + "]");
-
+            (findViewById(R.id.my_card_1)).setClickable(false);
+            (findViewById(R.id.my_card_2)).setClickable(false);
+            (findViewById(R.id.my_card_3)).setClickable(false);
+            (findViewById(R.id.my_card_4)).setClickable(false);
+            (findViewById(R.id.my_card_5)).setClickable(false);
+            (findViewById(R.id.dropped_1)).setClickable(false);
+            (findViewById(R.id.dropped_3)).setClickable(false);
+            (findViewById(R.id.dropped_2)).setClickable(false);
+            (findViewById(R.id.dropped_4)).setClickable(false);
+            (findViewById(R.id.dropped_5)).setClickable(false);
+            (findViewById(R.id.deck_cards)).setClickable(false);
+            (findViewById(R.id.my_drop)).setVisibility(View.GONE);
         }
-        int[] arr = {
-                R.id.score1, R.id.score2, R.id.score3
-        };
-        int i = 0;
 
+/*
         if (mRoomId != null) {
             for (Participant p : mParticipants) {
                 String pid = p.getParticipantId();
@@ -1501,12 +1525,13 @@ public class MainActivity extends Activity
         Log.d(TAG, "updateTurnUi: myid: " + mMyId);
         Log.d(TAG, "updateTurnUi: turn: " + turn);
         updateMyUI();
+        updatePeerScoresDisplay();
+
 /*
         if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
             ((TextView) findViewById(R.id.button_click_me)).setText("Wait for your turn");
             findViewById(R.id.button_click_me).setEnabled(false);
             ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
-            updatePeerScoresDisplay();
             return false;
         } else {
             findViewById(R.id.button_click_me).setEnabled(true);
@@ -1521,8 +1546,12 @@ public class MainActivity extends Activity
 
     boolean isTurn(String participant) {
         if (!mParticipants.get(turn).getParticipantId().equals(participant)) {
+            Log.d(TAG, "myTurn=false");
+
             return false;
         } else {
+            Log.d(TAG, "myTurn=true");
+
             return true;
         }
     }
@@ -1737,28 +1766,47 @@ public class MainActivity extends Activity
 
 
     private int checkVaildDrop(int[] split) {
+        Log.d(TAG, "checkVaildDrop() - split:"+Arrays.toString(split));
+
         //return 0 - not vaild, 1 - one card, 2 - equal cards, 3- orderd cards
-        if (split.length == 1) { // Checking if there is only 1 card
+        if (split.length == 1) { // Checking if there is only 1 card.
+            Log.d(TAG, "checkVaildDrop() - split.length == 1");
+
             if (split[0] > myCards.size() - 1) {
+                Log.d(TAG, "checkVaildDrop() - split.length == 1 - return 0");
+
                 return 0;
             }
+            Log.d(TAG, "checkVaildDrop() - split.length == 1 - return 1");
+
             return 1;
         } else {
             for (int i = 0; i < split.length; i++) {
                 if (split[i] >= myCards.size()) { //Checking out of bounds
+                    Log.d(TAG, "checkVaildDrop() - Checking out of bounds - return 0");
+
                     return 0;
                 } else {
+                    Log.d(TAG, "checkVaildDrop() - Checking out of bounds - else");
 
                 }
             }
             if (split.length == 2) {  //Checking case of 2 jokers or 2 equals cards
+                Log.d(TAG, "checkVaildDrop() - Checking case of 2 jokers or 2 equals cards");
+
                 if (myCards.get(split[0]).n == myCards.get(split[1]).n) {
+                    Log.d(TAG, "checkVaildDrop() - Checking case of 2 jokers or 2 equals cards - return 2");
+
                     return 2;
                 }
             }
             if (checkEqualArray(split) == 1) { // Vaild drop of equals cards
+                Log.d(TAG, "checkVaildDrop() - Vaild drop of equals cards - return 2");
+
                 return 2;
             } else if (checkOrderArray(split) == 1) {
+                Log.d(TAG, "checkVaildDrop() - Vaild drop of order cards - return 3");
+
                 return 3;
             }
             return 0;
@@ -1767,6 +1815,8 @@ public class MainActivity extends Activity
     }
 
     private int checkEqualArray(int Tokens[]) {
+        Log.d(TAG, "checkEqualArray() - "+Arrays.toString(Tokens));
+
         int val = -1;
         for (int i = 0; i < Tokens.length; i++) {
             if (myCards.get(Tokens[i]).n != 0 && myCards.get(Tokens[i]).n != val) {
@@ -1782,13 +1832,12 @@ public class MainActivity extends Activity
     }
 
     private int checkOrderArray(int Tokens[]) {
+        Log.d(TAG, "checkOrderArray() - "+Arrays.toString(Tokens));
 
         char symbol = getSymbol(Tokens);
         int orderArray[] = getOrder(Tokens, symbol);
         for (int i = 0; i < orderArray.length - 1; i++) {
-            if (orderArray[i] == -100) {
-                return 0;
-            }
+
             if (orderArray[i + 1] - orderArray[i] != 1) {
                 return 0;
             }
@@ -1798,9 +1847,9 @@ public class MainActivity extends Activity
 
     private int[] getOrder(int Tokens[], char s) {
         int orderArray[] = new int[Tokens.length];
-        if (myCards.get(Tokens[0]).n == 0 && myCards.get(Tokens[Tokens.length - 1]).n == 0) {
+        if ((myCards.get(Tokens[0]).n == 14 || myCards.get(Tokens[0]).n == 15)  && myCards.get(Tokens[Tokens.length - 1]).n == 0) {
             for (int i = 1; i < Tokens.length; i++) {
-                if (myCards.get(Tokens[i]).n == 0) {
+                if ((myCards.get(Tokens[0]).n == 14 || myCards.get(Tokens[0]).n == 15) ) {
                     orderArray[i] = myCards.get(Tokens[i - 1]).n + 1;
                 } else if (myCards.get(Tokens[i]).s == s) {
                     orderArray[i] = myCards.get(Tokens[i]).n;
@@ -1809,9 +1858,9 @@ public class MainActivity extends Activity
                 }
             }
             orderArray[0] = orderArray[1] - 1;
-        } else if (myCards.get(Tokens[0]).n != 0) {
+        } else if ((myCards.get(Tokens[0]).n != 14 || myCards.get(Tokens[0]).n != 15) ) {
             for (int i = 0; i < Tokens.length; i++) {
-                if (myCards.get(Tokens[i]).n == 0) {
+                if ((myCards.get(Tokens[i]).n == 14 || myCards.get(Tokens[i]).n == 15) ) {
                     orderArray[i] = myCards.get(Tokens[i - 1]).n + 1;
                 } else if (myCards.get(Tokens[i]).s == s) {
                     orderArray[i] = myCards.get(Tokens[i]).n;
@@ -1821,7 +1870,7 @@ public class MainActivity extends Activity
             }
         } else {
             for (int i = Tokens.length - 1; i >= 0; i--) {
-                if (myCards.get(Tokens[i]).n == 0) {
+                if ((myCards.get(Tokens[i]).n == 14 || myCards.get(Tokens[i]).n == 15) ) {
                     orderArray[i] = myCards.get(Tokens[i + 1]).n - 1;
                 } else if (myCards.get(Tokens[i]).s == s) {
                     orderArray[i] = myCards.get(Tokens[i]).n;
@@ -1830,6 +1879,8 @@ public class MainActivity extends Activity
                 }
             }
         }
+        Log.d(TAG, "getOrder() - orderArray: "+Arrays.toString(orderArray));
+
         return orderArray;
     }
 
@@ -2057,15 +2108,287 @@ public class MainActivity extends Activity
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void myCard1OnClick(View view) {
-        view.setSelected(true);
-        if(view.isSelected()) {
-            int y = view.getTop();
-            view.setTop(y - 30);
+
+        Log.d(TAG, "myCard1OnClick=" + primaryDeck.toString());
+        Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+
+        if (view.isSelected()) {
+            view.setSelected(false);
+            view.setBackground(null);
+            myCardsDrop.remove((Integer) 0);
+        } else {
+            view.setSelected(true);
+            view.setBackground(highlight);
+            myCardsDrop.add(0);
         }
-        else{
-            int y = view.getTop();
-            view.setTop(y + 30);
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void myCard2OnClick(View view) {
+
+        Log.d(TAG, "myCard2OnClick=" + primaryDeck.toString());
+        Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+
+        if (view.isSelected()) {
+            view.setSelected(false);
+            view.setBackground(null);
+            myCardsDrop.remove((Integer) 1);
+
+        } else {
+            view.setSelected(true);
+            view.setBackground(highlight);
+            myCardsDrop.add(1);
+        }
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void myCard3OnClick(View view) {
+
+        Log.d(TAG, "myCard3OnClick=" + primaryDeck.toString());
+        Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+
+        if (view.isSelected()) {
+            view.setSelected(false);
+            view.setBackground(null);
+            myCardsDrop.remove((Integer) 2);
+
+        } else {
+            view.setSelected(true);
+            view.setBackground(highlight);
+            myCardsDrop.add(2);
+        }
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void myCard4OnClick(View view) {
+
+        Log.d(TAG, "myCard4OnClick=" + primaryDeck.toString());
+        Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+
+        if (view.isSelected()) {
+            view.setSelected(false);
+            view.setBackground(null);
+            myCardsDrop.remove((Integer) 3);
+
+        } else {
+            view.setSelected(true);
+            view.setBackground(highlight);
+            myCardsDrop.add(3);
+        }
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void myCard5OnClick(View view) {
+
+        Log.d(TAG, "myCard5OnClick=" + primaryDeck.toString());
+        Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+
+        if (view.isSelected()) {
+            view.setSelected(false);
+            view.setBackground(null);
+            myCardsDrop.remove((Integer) 4);
+        } else {
+            view.setSelected(true);
+            view.setBackground(highlight);
+            myCardsDrop.add(4);
+        }
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void dropedCard1OnClick(View view) {
+        takeFromDroppedCards(0);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void dropedCard2OnClick(View view) {
+        takeFromDroppedCards(1);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void dropedCard3OnClick(View view) {
+        takeFromDroppedCards(2);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void dropedCard4OnClick(View view) {
+        takeFromDroppedCards(3);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void dropedCard5OnClick(View view) {
+        takeFromDroppedCards(4);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public boolean takeFromDroppedCards(int dropCard) {
+        Log.d(TAG, "myCard1OnClick=");
+        boolean b = checkValidDrop();
+        if (b) {
+            boolean b2 = checkValidTake(dropCard);
+            if (b2) {
+                final ArrayList<Card> myDrop = new ArrayList<Card>();
+
+                for (int i = 0; i < myCardsDrop.size(); i++) {
+
+                    int card = myCardsDrop.get(i);
+                    myDrop.add(myCards.get(card));
+                    Log.d(TAG, "Dropping: " + myCardsDrop.get(i) + " sym: " + myDrop.get(i));
+
+                }
+                for (int i = 0; i < myDrop.size(); i++) {
+                    myCards.remove(myDrop.get(i));
+                }
+
+                Card pop;
+                ArrayList<Card> lastDrop = primaryDeck.pop();
+                pop = lastDrop.remove(dropCard);
+                primaryDeck.add(lastDrop);
+                myCards.add(pop);
+                primaryDeck.add(myDrop);
+                myCardsDrop.removeAllElements();
+                ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+                removeHighLightFromCards();
+
+
+                scoreOnePoint();
+                //take and drop
+                return true;
+            } else {
+                // toat not valid taking
+                return false;
+
+            }
+
+        } else {
+            //toast not valid drop
+            return false;
+
         }
     }
+
+    private boolean checkValidTake(int dropCard) {
+        Log.d(TAG, "takeFromLastDrop() called ");
+
+        ArrayList<Card> lastDrop = primaryDeck.peek();
+
+        //Taking card from 3 optional options to take.
+        if (lastDropType == 1) {    //case one card - taking the only one card are in primary deck.
+            if (dropCard >= 0 && dropCard <= lastDrop.size() - 1) {
+
+            } else {
+
+                Toast.makeText(this, "You select illegal cards to take, Try again.",
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+        } else if (lastDropType == 2) { //case equal
+            if (dropCard >= 0 && dropCard <= lastDrop.size() - 1) {
+
+            } else {
+
+                Toast.makeText(this, "You select illegal cards to take, Try again.",
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+        } else {   //case order
+            if (dropCard == 0 || dropCard == lastDrop.size() - 1) {
+
+            } else {
+
+                Toast.makeText(this, "You select illegal cards to take, Try again.",
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+
+        }
+        return true;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    public void cardDeckOnClick(View view) {
+        Log.d(TAG, "cardDeckOnClick");
+        boolean b = checkValidDrop();
+        if (b) {
+            final ArrayList<Card> myDrop = new ArrayList<Card>();
+
+            for (int i = 0; i < myCardsDrop.size(); i++) {
+
+                int card = myCardsDrop.get(i);
+                myDrop.add(myCards.get(card));
+                Log.d(TAG, "Dropping: " + myCardsDrop.get(i) + " sym: " + myDrop.get(i));
+
+            }
+            for (int i = 0; i < myDrop.size(); i++) {
+                myCards.remove(myDrop.get(i));
+            }
+
+            Card pop = cardDeck.jp.remove(0);
+            myCards.add(pop);
+            primaryDeck.add(myDrop);
+            myCardsDrop.removeAllElements();
+            ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+
+            removeHighLightFromCards();
+            scoreOnePoint();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private void removeHighLightFromCards() {
+
+        Log.d(TAG, "removeHighLightFromCards()");
+        ((ImageView) (findViewById(R.id.my_card_1))).setBackground(null);
+        ((ImageView) (findViewById(R.id.my_card_2))).setBackground(null);
+        ((ImageView) (findViewById(R.id.my_card_3))).setBackground(null);
+        ((ImageView) (findViewById(R.id.my_card_4))).setBackground(null);
+        ((ImageView) (findViewById(R.id.my_card_5))).setBackground(null);
+
+    }
+
+    private boolean checkValidDrop() {
+        if (myCardsDrop == null || myCardsDrop.size() == 0) {
+
+            Toast.makeText(this, "Select cards to drop, Try again. ",
+                    Toast.LENGTH_LONG).show();
+            return false;
+        }
+        int[] split = new int[myCardsDrop.size()];
+        for (int i = 0; i < myCardsDrop.size(); i++) {
+            split[i] = myCardsDrop.get(i);
+        }
+        int CVD = checkVaildDrop(split);
+        if (CVD == 0) {
+
+            Toast.makeText(this, "You enter illegal cards to drop, Try again. ",
+                    Toast.LENGTH_LONG).show();
+            return false;
+        } else {
+
+
+            this.myLastDropType = CVD;
+            return true;
+        }
+    }
+
+
 }
