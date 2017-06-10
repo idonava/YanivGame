@@ -1397,11 +1397,11 @@ public class MainActivity extends Activity
 
         if (mParticipantPlayerPosition.get("top").equals(pid)) {
             arr = cardsTopID;
-        } else if (mParticipantPlayerPosition.get("right").equals(pid)) {
-            arr = cardsRightID;
+        } else if (mParticipantPlayerPosition.get("left").equals(pid)) {
+            arr = cardsLeftID;
 
         } else {
-            arr = cardsLeftID;
+            arr = cardsRightID;
 
         }
         ImageView myCard;
@@ -1440,10 +1440,10 @@ public class MainActivity extends Activity
                 if (mParticipantPlayerPosition.get("top").equals(p.getParticipantId())) {
                     ((TextView) findViewById(R.id.topName)).setText(p.getDisplayName());
 
-                } else if (mParticipantPlayerPosition.get("right").equals(p.getParticipantId())) {
-                    ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
-                } else {
+                } else if (mParticipantPlayerPosition.get("left").equals(p.getParticipantId())) {
                     ((TextView) findViewById(R.id.leftName)).setText(p.getDisplayName());
+                } else {
+                    ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
 
                 }
             }
