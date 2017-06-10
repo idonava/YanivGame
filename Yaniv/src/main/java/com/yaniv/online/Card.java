@@ -15,7 +15,7 @@ public class Card implements Comparable<Card> {
     char s;
     int v;
 
- //   String resourceName = "";
+    //   String resourceName = "";
 
     public int getN() {
         return n;
@@ -28,8 +28,9 @@ public class Card implements Comparable<Card> {
     public int getV() {
         return v;
     }
+
     public String getKey() {
-        return ""+n+s;
+        return "" + n + s;
     }
  /*   public String getResourceName() {
         return resourceName;
@@ -38,8 +39,10 @@ public class Card implements Comparable<Card> {
     public Card(int num, char symbol) {
         this.n = num;
         this.s = symbol;
-        if (num > 10) {
+        if (num > 10 && num < 14) {
             this.v = 10;
+        } else if (num > 13) {
+            this.v = 0;
         } else {
             this.v = num;
         }
@@ -78,9 +81,9 @@ public class Card implements Comparable<Card> {
     public int compareTo(Card car) {
         if (this.n == car.n) {
             return 0;
-        } else if (this.n == 14) {
+        } else if (this.n == 14 || this.n == 15) {
             return -1;
-        } else if (car.n == 14) {
+        } else if (car.n == 14 || car.n == 15) {
             return 1;
         } else {
             return this.n > car.n ? 1 : -1;
