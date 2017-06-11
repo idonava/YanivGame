@@ -219,20 +219,6 @@
         </RelativeLayout>
 
         <TextView
-            android:id="@+id/declare_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="false"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentLeft="false"
-            android:layout_alignParentRight="false"
-            android:layout_alignParentStart="false"
-            android:layout_alignParentTop="false"
-            android:layout_centerHorizontal="true"
-            android:layout_centerInParent="false"
-            android:layout_centerVertical="false" />
-
-        <TextView
             android:id="@+id/my_drop"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -587,8 +573,7 @@
                 android:id="@+id/leftName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:text="Idonava23487235" />
+                android:layout_gravity="center_vertical|center_horizontal" />
 
         </LinearLayout>
 
@@ -596,20 +581,7 @@
             android:id="@+id/turn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:rotation="90"
-            android:text="TextView" />
-
-        <TextView
-            android:id="@+id/card_deck"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Card Deck" />
-
-        <TextView
-            android:id="@+id/primary_deck"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Card Deck" />
+            android:rotation="90" />
 
         <TextView
             android:id="@+id/owner"
@@ -624,7 +596,9 @@
             android:id="@+id/yaniv_declare"
             style="@style/GameButton"
             android:layout_marginBottom="20dp"
-            android:text="Yaniv !" />
+            android:onClick="declareYanivOnClick"
+            android:text="Yaniv !"
+            android:visibility="visible" />
 
         <TextView
             android:id="@+id/countdown"

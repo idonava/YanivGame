@@ -942,7 +942,7 @@ public class MainActivity extends Activity
         sendCardDeckToAllParticipants();
         sendMyCardsToAllParticipants();
         sendPrimaryDeckToAllParticipants();
-
+        ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
     }
 
     /*
@@ -956,6 +956,7 @@ public class MainActivity extends Activity
     // whether it's a final or interim score. The second byte is the score.
     // There is also the
     // 'S' message, which indicates that the game should start.
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage rtm) {
 
@@ -1003,6 +1004,12 @@ public class MainActivity extends Activity
                 updatePrimaryDeckUI();
             }
         }
+        //when player declare yaniv
+        else if ((int)buf[0]==7){
+            updateParticipantsCardsOnGameOverUI();
+            lockAllButtons();
+
+        }
         // Regular messages to change the turn.
         else {
 
@@ -1043,6 +1050,23 @@ public class MainActivity extends Activity
 
         }
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private void lockAllButtons() {
+        (findViewById(R.id.my_card_1)).setClickable(false);
+        (findViewById(R.id.my_card_2)).setClickable(false);
+        (findViewById(R.id.my_card_3)).setClickable(false);
+        (findViewById(R.id.my_card_4)).setClickable(false);
+        (findViewById(R.id.my_card_5)).setClickable(false);
+        (findViewById(R.id.dropped_1)).setClickable(false);
+        (findViewById(R.id.dropped_3)).setClickable(false);
+        (findViewById(R.id.dropped_2)).setClickable(false);
+        (findViewById(R.id.dropped_4)).setClickable(false);
+        (findViewById(R.id.dropped_5)).setClickable(false);
+        (findViewById(R.id.deck_cards)).setClickable(false);
+        (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+        removeHighLightFromCards();
     }
 
     private void setPlayerPositonUI() {
@@ -1251,6 +1275,7 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(false);
             (findViewById(R.id.deck_cards)).setClickable(false);
             (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+
         }
 
 
@@ -1379,6 +1404,7 @@ public class MainActivity extends Activity
             myCard = (ImageView) findViewById(cardsID[i]);
             myCard.setVisibility(View.GONE);
         }
+        checkYanivOpportunity();
         //     myCard = (ImageView) findViewById(cardsID[0]);
         //   myCard.setImageResource(R.drawable.c_2_of_diamonds);
    /*     Log.d(TAG, "int_resource: " + this.getResources().getIdentifier("drawable/" + myCards.get(0).getResourceName(), "drawable", getPackageName()));
@@ -1421,6 +1447,53 @@ public class MainActivity extends Activity
             myCard = (ImageView) findViewById(arr[i]);
             myCard.setVisibility(View.GONE);
         }
+
+    }
+
+    public void updateParticipantsCardsOnGameOverUI() {
+        Log.d(TAG, "updateParticipantsCardsOnGameOverUI()");
+        int i;
+        ImageView myCard;
+        for (Participant p : mParticipants) {
+            String id = p.getParticipantId();
+            if (!id.equals(mMyId)) {
+                for (i = 0; i < mParticipantCards.get(id).size(); i++) {
+                    int arr[];
+                    if (mParticipantPlayerPosition.get("top").equals(id)) {
+                        arr = cardsTopID;
+                    } else if (mParticipantPlayerPosition.get("left").equals(id)) {
+                        arr = cardsLeftID;
+
+                    } else {
+                        arr = cardsRightID;
+                    }
+                    int drawable = cardsDrawable.get("" + mParticipantCards.get(id).get(i).getKey());
+                    myCard = (ImageView) findViewById(arr[i]);
+                    myCard.setImageResource(drawable);
+                    //         myCard.setVisibility(View.VISIBLE);
+
+                }
+            }
+        }
+
+/*
+        ImageView myCard;
+        for (i = 0; i < mParticipantCards.size(); i++) {
+            int drawable;
+            if (yaniv) {
+                drawable = cardsDrawable.get("" + mParticipantCards.get(pid).get(i).getKey());
+            } else {
+                drawable = R.drawable.pile_1;
+            }
+            myCard = (ImageView) findViewById(arr[i]);
+            myCard.setImageResource(drawable);
+            myCard.setVisibility(View.VISIBLE);
+
+        }
+        for (; i < 5; i++) {
+            myCard = (ImageView) findViewById(arr[i]);
+            myCard.setVisibility(View.GONE);
+        }*/
 
     }
 
@@ -1704,7 +1777,7 @@ public class MainActivity extends Activity
             Log.d(TAG, "Tokens problem()3 - " + Arrays.toString(Tokens));
 
             for (int i = Tokens.length - 1; i >= 0; i--) {
-                Log.d(TAG, "getOrder() - i: " +i+" -  "+myCards.get(Tokens[i]).toString());
+                Log.d(TAG, "getOrder() - i: " + i + " -  " + myCards.get(Tokens[i]).toString());
 
                 if ((myCards.get(Tokens[i]).n == 14 || myCards.get(Tokens[i]).n == 15)) {
                     orderArray[i] = myCards.get(Tokens[i + 1]).n - 1;
@@ -1748,95 +1821,22 @@ public class MainActivity extends Activity
             ((findViewById(R.id.yaniv_declare))).setVisibility(View.VISIBLE);
         } else {
             ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
-
         }
     }
 
-    public void declareYanivOnClick() {
-        ((findViewById(R.id.declare_text))).setVisibility(View.VISIBLE);
+    public void declareYanivOnClick(View view) {
+        //send a declare message to all participants.
+        byte[] sendMsg = new byte[5];
+        sendMsg[0] = (int) 7;
+        messageToAllParticipants(sendMsg, true);
+        updateParticipantsCardsOnGameOverUI();
+        // each participant "shows" his cards and his score UI
+
+        //the game stop.
+
 
     }
 
-    /*
-        private void takeFromPrimaryDeck(int[] split) {
-            ArrayList<Card> lastDrop = new ArrayList<Card>();
-            lastDrop = primaryDeck.pop();
-            Card pop = lastDrop.get(0);
-            boolean bool = false;
-            if (lastDropType == 1) {
-                pop = lastDrop.remove(0);
-            } else if (lastDropType == 2) { //case equal
-                System.out.println("# Enter a vaild index of card to take from the last drop:");
-                int n;
-                while (bool == false) {
-                    Scanner reader2 = new Scanner(System.in);
-                    n = reader2.nextInt();
-                    if (n >= 0 && n <= lastDrop.size() - 1) {
-                        pop = lastDrop.remove(n);
-                        bool = true;
-                    } else {
-                        System.out.println("## You enter illegal card to take, Try again. ");
-                    }
-                }
-            } else {    // case order
-                System.out.println("# Enter a vaild index of card to take from the last drop:");
-                while (bool == false) {
-                    Scanner reader2 = new Scanner(System.in);
-                    int n = reader2.nextInt();
-                    if (n == 0 || n == lastDrop.size() - 1) {
-                        pop = lastDrop.remove(n);
-                        bool = true;
-                    } else {
-                        System.out.println("## You enter illegal card to take, Try again. ");
-                    }
-                }
-
-            }
-            primaryPot.add(lastDrop);
-
-            ArrayList<Card> myDrop = new ArrayList<Card>();
-
-            for (int i = 0; i < split.length; i++) {
-                int card = split[i];
-                myDrop.add(players[num].cards.get(card));
-            }
-            for (int i = 0; i < myDrop.size(); i++) {
-                players[num].cards.remove(myDrop.get(i));
-            }
-
-            primaryPot.add(myDrop);
-            wait(waitTime);
-            System.out.println("You got from the Primary Pot: " + pop.toString());
-
-            players[num].cards.add(pop);
-            players[num].calculateSum();
-
-            System.out.println("Your new Cards:  " + players[num].cards + " [sum: " + players[num].sum + "]");
-            wait(waitTime);
-        }
-
-        private void takeFromCardDeck(int[] split) {
-         /*   if (c.getSize() == 0) {
-                suffleJackPot();
-            }*/
-     /*   Card pop = cardDeck.jp.remove(0);
-        ArrayList<Card> myDrop = new ArrayList<Card>();
-        for (int i = 0; i < split.length; i++) {
-            int card = split[i];
-            myDrop.add(myCards.get(card));
-        }
-        for (int i = 0; i < myDrop.size(); i++) {
-            myCards.remove(myDrop.get(i));
-        }
-        primaryDeck.add(myDrop);
-        System.out.println("You got from the JackPot: " + pop.toString());
-        myCards.add(pop);
-       calculateSum();
-
-        System.out.println("Your new Cards:  " + myCards + " [sum: " + mySum+ "]");
-
-    }
-*/
     public String getMyCardsWithVal() {
         String ans = "";
         for (int i = 0; i < myCards.size(); i++) {
