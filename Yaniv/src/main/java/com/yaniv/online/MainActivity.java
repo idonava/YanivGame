@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -56,6 +57,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.yaniv.online.R;
+
+import org.w3c.dom.Text;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -134,6 +137,7 @@ public class MainActivity extends Activity
     int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
 
     Vector<Integer> myCardsDrop = new Vector<>();
+    Vector<String> myCardsDropToString = new Vector<>();
     Vector<Integer> fromDropCardsList = new Vector<>();
     boolean yaniv = false;
     // cell[0] cell[X]                         WHAT AND WHO                                                        EXPLAIN
@@ -632,6 +636,7 @@ public class MainActivity extends Activity
     public void onRoomConnected(int statusCode, Room room) {
 
         myCards = new Vector<>();
+        initialAllVal();
         //participantsCards = new Vector<Vector<Card>>();
         if (getOwnerId().equals(mMyId)) {
             owner = true;
@@ -1005,7 +1010,7 @@ public class MainActivity extends Activity
             }
         }
         //when player declare yaniv
-        else if ((int)buf[0]==7){
+        else if ((int) buf[0] == 7) {
             updateParticipantsCardsOnGameOverUI();
             lockAllButtons();
 
@@ -1262,6 +1267,10 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(true);
             (findViewById(R.id.deck_cards)).setClickable(true);
             (findViewById(R.id.my_drop)).setVisibility(View.VISIBLE);
+            ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+            ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+            ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+
         } else {
             (findViewById(R.id.my_card_1)).setClickable(false);
             (findViewById(R.id.my_card_2)).setClickable(false);
@@ -1275,7 +1284,15 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(false);
             (findViewById(R.id.deck_cards)).setClickable(false);
             (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+            (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+            if (isTurn(mParticipantPlayerPosition.get("top"))) {
+                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.BOLD);
+            } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
+                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.BOLD);
 
+            } else {
+                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.BOLD);
+            }
         }
 
 
@@ -1359,14 +1376,19 @@ public class MainActivity extends Activity
 
     //*/*/*/*/*/*/*/*   Yaniv Game Functions   */*/*/*/*/*/*/*//
     public void initialAllVal() {
-        myCards = null;
+        myCards = new Vector<>();
         mySum = 0;
         lastDropType = 0;
         //  mParticipantScore = new HashMap<String, Integer>();
         mParticipantCards = new HashMap<String, Vector<Card>>();
         //  mFinishedParticipants = new HashSet<String>();
-        primaryDeck = null;
-        cardDeck = null;
+        primaryDeck = new Stack<>();
+        cardDeck = new Cards();
+        mParticipantScore = new HashMap<String, Integer>();
+        mParticipantPlayerPosition = new HashMap<String, String>();
+        myCardsDrop = new Vector<>();
+        myCardsDropToString = new Vector<>();
+        yaniv = false;
     }
 
     //Owner Functions
@@ -1952,17 +1974,20 @@ public class MainActivity extends Activity
 
         Log.d(TAG, "myCard1OnClick=" + primaryDeck.toString());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+        String card = myCards.get(0).toString();
 
         if (view.isSelected()) {
             view.setSelected(false);
             view.setBackground(null);
             myCardsDrop.remove((Integer) 0);
+            myCardsDropToString.remove(card);
         } else {
             view.setSelected(true);
             view.setBackground(highlight);
             myCardsDrop.add(0);
+            myCardsDropToString.add(card);
         }
-        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
 
     }
 
@@ -1971,18 +1996,22 @@ public class MainActivity extends Activity
 
         Log.d(TAG, "myCard2OnClick=" + primaryDeck.toString());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+        String card = myCards.get(1).toString();
 
         if (view.isSelected()) {
             view.setSelected(false);
             view.setBackground(null);
             myCardsDrop.remove((Integer) 1);
+            myCardsDropToString.remove(card);
 
         } else {
             view.setSelected(true);
             view.setBackground(highlight);
             myCardsDrop.add(1);
+            myCardsDropToString.add(card);
+
         }
-        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
 
     }
 
@@ -1991,18 +2020,22 @@ public class MainActivity extends Activity
 
         Log.d(TAG, "myCard3OnClick=" + primaryDeck.toString());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+        String card = myCards.get(2).toString();
 
         if (view.isSelected()) {
             view.setSelected(false);
             view.setBackground(null);
             myCardsDrop.remove((Integer) 2);
+            myCardsDropToString.remove(card);
 
         } else {
             view.setSelected(true);
             view.setBackground(highlight);
             myCardsDrop.add(2);
+            myCardsDropToString.add(card);
+
         }
-        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
 
     }
 
@@ -2011,18 +2044,22 @@ public class MainActivity extends Activity
 
         Log.d(TAG, "myCard4OnClick=" + primaryDeck.toString());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+        String card = myCards.get(3).toString();
 
         if (view.isSelected()) {
             view.setSelected(false);
             view.setBackground(null);
             myCardsDrop.remove((Integer) 3);
+            myCardsDropToString.remove(card);
 
         } else {
             view.setSelected(true);
             view.setBackground(highlight);
             myCardsDrop.add(3);
+            myCardsDropToString.add(card);
+
         }
-        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
 
     }
 
@@ -2031,17 +2068,22 @@ public class MainActivity extends Activity
 
         Log.d(TAG, "myCard5OnClick=" + primaryDeck.toString());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
+        String card = myCards.get(4).toString();
 
         if (view.isSelected()) {
             view.setSelected(false);
             view.setBackground(null);
             myCardsDrop.remove((Integer) 4);
+            myCardsDropToString.remove(card);
+
         } else {
             view.setSelected(true);
             view.setBackground(highlight);
             myCardsDrop.add(4);
+            myCardsDropToString.add(card);
+
         }
-        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
+        ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
 
     }
 
@@ -2102,6 +2144,7 @@ public class MainActivity extends Activity
                 myCards.add(pop);
                 primaryDeck.add(myDrop);
                 myCardsDrop.removeAllElements();
+                myCardsDropToString.removeAllElements();
                 ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
 
                 removeHighLightFromCards();
@@ -2185,6 +2228,7 @@ public class MainActivity extends Activity
             myCards.add(pop);
             primaryDeck.add(myDrop);
             myCardsDrop.removeAllElements();
+            myCardsDropToString.removeAllElements();
             ((TextView) findViewById(R.id.my_drop)).setText(myCardsDrop.toString());
 
             removeHighLightFromCards();
