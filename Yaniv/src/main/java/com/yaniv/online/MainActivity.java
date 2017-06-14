@@ -424,16 +424,16 @@ public class MainActivity extends Activity
         Log.d(TAG, "**** got onStop");
 
         // if we're in a room, leave it.
-        leaveRoom();
+      //  leaveRoom();
 
         // stop trying to keep the screen on
-        stopKeepingScreenOn();
+     //   stopKeepingScreenOn();
 
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
-            switchToMainScreen();
-        } else {
-            switchToScreen(R.id.screen_sign_in);
-        }
+//        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+//            switchToMainScreen();
+//        } else {
+//            switchToScreen(R.id.screen_sign_in);
+//        }
         super.onStop();
     }
 
@@ -454,13 +454,28 @@ public class MainActivity extends Activity
                     "GameHelper: client was already connected on onStart()");
         }
         super.onStart();
+        (findViewById(R.id.button_score)).setClickable(false);
     }
 
     // Handle back key to make sure we cleanly leave a game if we are in the middle of one
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent e) {
         if (keyCode == KeyEvent.KEYCODE_BACK && mCurScreen == R.id.screen_game) {
-            leaveRoom();
+            new AlertDialog.Builder(this)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Leaving the game")
+                    .setMessage("Are you sure you want to leave the game?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            leaveRoom();
+                        }
+
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+
             return true;
         }
         return super.onKeyDown(keyCode, e);
@@ -681,6 +696,7 @@ public class MainActivity extends Activity
             //update all participant cards ui
 
             updateParticipantsNamesAndUI();
+
         }
 
     }
@@ -948,6 +964,7 @@ public class MainActivity extends Activity
         sendMyCardsToAllParticipants();
         sendPrimaryDeckToAllParticipants();
         ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
+        ((Button)(findViewById(R.id.button_score))).setText("Score: "+mySum);
     }
 
     /*
@@ -994,7 +1011,7 @@ public class MainActivity extends Activity
         else if ((int) buf[0] == 2) {
 
             mParticipantCards.put(sender, (Vector<Card>) fromGson(buf, 5, buf.length, DATA_TYPE_MY_CARDS));
-            Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished is turn, is new cards:" + mParticipantCards.get(sender));
+            Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished is turn, his new cards:" + mParticipantCards.get(sender));
             updatePeerScoresDisplay();  //temp - needs to update ONLY the sender.
             updateParticipantUI(sender);
             //  updateCardDeck();
@@ -1284,14 +1301,28 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(false);
             (findViewById(R.id.deck_cards)).setClickable(false);
             (findViewById(R.id.my_drop)).setVisibility(View.GONE);
-            (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+
             if (isTurn(mParticipantPlayerPosition.get("top"))) {
                 ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.BOLD);
+                Log.d(TAG, "updateTurnUi: top: " +mParticipantPlayerPosition.get("top"));
+                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+
+
             } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
                 ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.BOLD);
+                Log.d(TAG, "updateTurnUi: left: " +mParticipantPlayerPosition.get("left"));
+                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+
 
             } else {
                 ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.BOLD);
+                Log.d(TAG, "updateTurnUi: right: " +mParticipantPlayerPosition.get("right"));
+                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+
+
             }
         }
 
@@ -1580,6 +1611,8 @@ public class MainActivity extends Activity
         for (Card card : myCards) {
             mySum += card.v;
         }
+        ((Button)(findViewById(R.id.button_score))).setText("Score: "+mySum);
+
     }
 
     public int[] takeFrom() {
@@ -1639,45 +1672,6 @@ public class MainActivity extends Activity
 
 
         }
-        return split;
-    }
-
-    public int[] dropCards(Stack<ArrayList<Card>> primaryPot) {
-        Log.d(TAG, "dropCards() called ");
-
-      /*  System.out.println("Primary Pot: " + primaryPot.peek());
-        System.out.println(name + " Cards: " + cards + " [sum: " + sum + "]");
-        System.out.print("Enter the index's of cards to drop (with ',' between each index): ");*/
-        String[] splitString = dropCardsEditText.getText().toString().split(",");//((EditText) (findViewById(R.id.terminalDropCards))).getText().toString().split(",");
-        Log.d(TAG, "dropCards() - splitString[]: " + Arrays.toString(splitString));
-
-        int[] split = tokensStringToInt(splitString);
-        Log.d(TAG, "dropCards() - splitInt[]: " + Arrays.toString(split));
-
-        if (split == invalidDrop) {
-            Log.d(TAG, "invalidDrop - Try Again");
-
-            Toast.makeText(this, "You enter illegal cards to drop, Try again. ",
-                    Toast.LENGTH_LONG).show();
-          /*  splitString = popEditText().split(",");
-            split = tokensStringToInt(splitString);
-            CVD = checkVaildDrop(split);*/
-            return invalidDrop;
-        }
-        int CVD = checkVaildDrop(split);
-        Log.d(TAG, "CVD: " + CVD);
-
-        while (CVD == 0) {
-            Log.d(TAG, "CVD=0 - Try Again");
-
-            Toast.makeText(this, "CVD: You enter illegal cards to drop, Try again. ",
-                    Toast.LENGTH_LONG).show();
-          /*  splitString = popEditText().split(",");
-            split = tokensStringToInt(splitString);
-            CVD = checkVaildDrop(split);*/
-            return invalidDrop;
-        }
-        this.myLastDropType = CVD;
         return split;
     }
 
