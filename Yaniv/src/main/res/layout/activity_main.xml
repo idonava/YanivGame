@@ -706,6 +706,81 @@
             app:layout_constraintVertical_bias="1.0"
             tools:layout_editor_absoluteY="407dp" />
 
+        <Button
+            android:id="@+id/button_highscores"
+            android:layout_width="107dp"
+            android:layout_height="33dp"
+            android:layout_marginBottom="127dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="8dp"
+            android:elegantTextHeight="true"
+            android:gravity="center_horizontal|center"
+            android:text="Highscores"
+            android:textSize="12sp"
+            android:onClick="showHighscore"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.387"
+            app:layout_constraintLeft_toRightOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/my_drop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <Button
+            android:id="@+id/leftPlayIcon"
+            android:layout_width="84dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="220dp"
+            android:text="Playing"
+            android:visibility="gone"
+            app:layout_constraintHorizontal_bias="0.026"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/myPlayIcon"
+            android:layout_width="114dp"
+            android:layout_height="50dp"
+            android:text="Your Turn"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.696" />
+
+        <Button
+            android:id="@+id/rightPlayIcon"
+            android:layout_width="84dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="220dp"
+            android:text="Playing"
+            android:visibility="gone"
+            app:layout_constraintHorizontal_bias="0.973"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/topPlayIcon"
+            android:layout_width="84dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="43dp"
+            android:text="Playing"
+            android:visibility="gone"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/turn" />
+
+        <android.support.constraint.Guideline
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/guideline"
+            app:layout_constraintGuide_begin="20dp"
+            android:orientation="vertical" />
+
 
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>

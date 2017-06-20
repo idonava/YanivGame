@@ -136,6 +136,7 @@ public class MainActivity extends Activity
     int cardsLeftID[] = {R.id.player_left_card_1, R.id.player_left_card_2, R.id.player_left_card_3, R.id.player_left_card_4, R.id.player_left_card_5};
     int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
 
+    private int[] highscores;
     Vector<Integer> myCardsDrop = new Vector<>();
     Vector<String> myCardsDropToString = new Vector<>();
     Vector<Integer> fromDropCardsList = new Vector<>();
@@ -1284,9 +1285,15 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(true);
             (findViewById(R.id.deck_cards)).setClickable(true);
             (findViewById(R.id.my_drop)).setVisibility(View.VISIBLE);
-            ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
-            ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
-            ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+
+            ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+            ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+            ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+            ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.VISIBLE);
+
+//            ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+//            ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+//            ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
 
         } else {
             (findViewById(R.id.my_card_1)).setClickable(false);
@@ -1303,24 +1310,36 @@ public class MainActivity extends Activity
             (findViewById(R.id.my_drop)).setVisibility(View.GONE);
 
             if (isTurn(mParticipantPlayerPosition.get("top"))) {
-                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.BOLD);
-                Log.d(TAG, "updateTurnUi: top: " +mParticipantPlayerPosition.get("top"));
-                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
-                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.BOLD);
+//                Log.d(TAG, "updateTurnUi: top: " +mParticipantPlayerPosition.get("top"));
+//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
 
 
             } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
-                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.BOLD);
-                Log.d(TAG, "updateTurnUi: left: " +mParticipantPlayerPosition.get("left"));
-                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
-                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.BOLD);
+//                Log.d(TAG, "updateTurnUi: left: " +mParticipantPlayerPosition.get("left"));
+//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
 
 
             } else {
-                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.BOLD);
-                Log.d(TAG, "updateTurnUi: right: " +mParticipantPlayerPosition.get("right"));
-                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
-                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.BOLD);
+//                Log.d(TAG, "updateTurnUi: right: " +mParticipantPlayerPosition.get("right"));
+//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
 
 
             }
@@ -1427,6 +1446,7 @@ public class MainActivity extends Activity
     void ownerInitial() {
         //((TextView) findViewById(R.id.owner)).setText("owner");
 
+        highscores = new int[mParticipants.size()];
         this.cardDeck = new Cards();
         this.primaryDeck = new Stack<>();
         // Add the first card to primary deck.
@@ -1844,13 +1864,27 @@ public class MainActivity extends Activity
         //send a declare message to all participants.
         byte[] sendMsg = new byte[5];
         sendMsg[0] = (int) 7;
+
+        int asafCount = 0;
+        int min = mySum;
+        int thisGameScores[] = new int[mParticipants.size()];
+        for(int i = 0; i < mParticipants.size(); i++){
+            String pid = mParticipants.get(i).getParticipantId();
+            thisGameScores[i] = getPlayerScore(mParticipants.get(i));
+            if (pid.equals(mMyId)) {
+                int yanivCallerIndex = i;
+            } else {
+                if (thisGameScores[i] <= min){
+                    min = thisGameScores[i];
+                }
+            }
+        }
+
         messageToAllParticipants(sendMsg, true);
         updateParticipantsCardsOnGameOverUI();
         // each participant "shows" his cards and his score UI
 
         //the game stop.
-
-
     }
 
     public String getMyCardsWithVal() {
@@ -2078,6 +2112,56 @@ public class MainActivity extends Activity
 
         }
         ((TextView) findViewById(R.id.my_drop)).setText(myCardsDropToString.toString());
+
+    }
+
+    private int getPlayerScore(Participant p){
+        String id = p.getParticipantId();
+        int sum = 0;
+        for (Card card : mParticipantCards.get(id)) {
+            sum += card.v;
+        }
+        return sum;
+    }
+
+    private void updateHighscores(){
+        int i = 0;
+        for (Participant p : mParticipants) {
+            String id = p.getParticipantId();
+            int sum = 0;
+            for (Card card : mParticipantCards.get(id)) {
+                sum += card.v;
+            }
+            highscores[i++] += sum;
+        }
+    }
+
+
+
+    private String formatScoresToString(){
+        String message = "";
+
+        for (Participant p : mParticipants) {
+            String name = p.getDisplayName();
+            String id = p.getParticipantId();
+            int sum = 0;
+            for (Card card : mParticipantCards.get(id)) {
+                sum += card.v;
+            }
+            message += name + ": " + sum +  System.getProperty("line.separator");
+        }
+
+        return message;
+    }
+
+
+    public void showHighscore(View view) {
+
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Highscores")
+                .setMessage(formatScoresToString())
+                .show();
 
     }
 
