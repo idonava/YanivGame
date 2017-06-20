@@ -19,10 +19,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -32,7 +32,6 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,11 +53,7 @@ import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.yaniv.online.R;
-
-import org.w3c.dom.Text;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -137,6 +132,8 @@ public class MainActivity extends Activity
     int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
 
     private int[] highscores;
+    int mStatusCode;
+    Room mRoom;
     Vector<Integer> myCardsDrop = new Vector<>();
     Vector<String> myCardsDropToString = new Vector<>();
     Vector<Integer> fromDropCardsList = new Vector<>();
@@ -163,7 +160,6 @@ public class MainActivity extends Activity
     //*/*/*/*/*/*  Yaniv  */*/*/*/*/*/
     private boolean firstRound = true;
     private int turn = 0;
-    private TextView tv;
     //True if the participant is the owner of the game
     private boolean owner = false;
     private int numOfMessages = 0;
@@ -222,7 +218,6 @@ public class MainActivity extends Activity
         for (int id : CLICKABLES) {
             findViewById(id).setOnClickListener(this);
         }
-        tv = (TextView) findViewById(R.id.turn);
         initialCardsDrawable();
     }
 
@@ -425,10 +420,10 @@ public class MainActivity extends Activity
         Log.d(TAG, "**** got onStop");
 
         // if we're in a room, leave it.
-      //  leaveRoom();
+        //  leaveRoom();
 
         // stop trying to keep the screen on
-     //   stopKeepingScreenOn();
+        //   stopKeepingScreenOn();
 
 //        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
 //            switchToMainScreen();
@@ -466,8 +461,7 @@ public class MainActivity extends Activity
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("Leaving the game")
                     .setMessage("Are you sure you want to leave the game?")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener()
-                    {
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             leaveRoom();
@@ -592,6 +586,7 @@ public class MainActivity extends Activity
     @Override
     public void onConnectedToRoom(Room room) {
         Log.d(TAG, "onConnectedToRoom.");
+        highscores = null;
         initialAllVal();
         //get participants and my ID:
         mParticipants = room.getParticipants();
@@ -651,6 +646,9 @@ public class MainActivity extends Activity
     @Override
     public void onRoomConnected(int statusCode, Room room) {
 
+        mStatusCode = statusCode;
+        mRoom = room;
+
         myCards = new Vector<>();
         initialAllVal();
         //participantsCards = new Vector<Vector<Card>>();
@@ -660,7 +658,6 @@ public class MainActivity extends Activity
             updateTurnUi();
         } else {
             owner = false;
-            ((TextView) findViewById(R.id.owner)).setText("");
 
 
         }
@@ -935,8 +932,6 @@ public class MainActivity extends Activity
             --mSecondsLeft;
 
         // update countdown
-        ((TextView) findViewById(R.id.countdown)).setText("0:" +
-                (mSecondsLeft < 10 ? "0" : "") + String.valueOf(mSecondsLeft));
 
         if (mSecondsLeft <= 0) {
             // finish game
@@ -965,7 +960,7 @@ public class MainActivity extends Activity
         sendMyCardsToAllParticipants();
         sendPrimaryDeckToAllParticipants();
         ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
-        ((Button)(findViewById(R.id.button_score))).setText("Score: "+mySum);
+        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
     }
 
     /*
@@ -1000,6 +995,10 @@ public class MainActivity extends Activity
         }
         // Owner create the cards for all participant. needs to save it on Mycards.
         else if ((int) buf[0] == 1) {
+            // starting highscores array if null
+            if (highscores == null) {
+                highscores = new int[mParticipants.size()];
+            }
             mParticipantCards = fromGson(buf, 5, buf.length, DATA_TYPE_M_PARTICIPANT_CARDS);
             myCards = mParticipantCards.containsKey(mMyId) ? mParticipantCards.get(mMyId) : null;
             calculateSum();
@@ -1029,15 +1028,13 @@ public class MainActivity extends Activity
         }
         //when player declare yaniv
         else if ((int) buf[0] == 7) {
-            updateParticipantsCardsOnGameOverUI();
-            lockAllButtons();
-
+            yanivCalled(buf);
         }
+
         // Regular messages to change the turn.
         else {
 
             turn = (int) buf[3];
-            tv.setText("" + turn);
             updateTurnUi();
             Log.d(TAG, "[onRealTimeMessageReceived] - regular message ");
 
@@ -1073,6 +1070,77 @@ public class MainActivity extends Activity
 
         }
 
+    }
+
+    // After a player called Yaniv, and the msg was received
+    // Update the scores for all the players.
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private void yanivCalled(byte[] buf) {
+
+        // if a yaniv was called
+        if (buf[2] == 0) {
+            for (int i = 0; i < mParticipants.size(); i++) {
+                if (i != buf[1]) {
+                    highscores[i] += getPlayerScore(mParticipants.get(i));
+                }
+            }
+        }
+        // if an asaf was called
+        else {
+            ArrayList<Integer> asafArray = new ArrayList<>();
+            for (int i = 0; i < buf[2]; i++) {
+                asafArray.add((int) buf[2 + i + 1]);
+            }
+            for (int i = 0; i < mParticipants.size(); i++) {
+                if (i == buf[1]) {
+                    highscores[i] += getPlayerScore(mParticipants.get(i)) + 30;
+                } else if (!asafArray.contains(i)) {
+                    highscores[i] += getPlayerScore(mParticipants.get(i));
+                }
+            }
+        }
+
+        updateParticipantsCardsOnGameOverUI();
+
+        String winner = "";
+        switch(buf[2]){
+            case 0:
+                winner = "The winner is: " + mParticipants.get(buf[3]).getDisplayName() + "!";
+                break;
+            case 1:
+                winner = "ASAF!!! the winner is: " + mParticipants.get(buf[3]).getDisplayName() + "!";
+                break;
+            case 2:
+                winner = "ASAF!!! the winners are: " + mParticipants.get(buf[3]).getDisplayName() + " and " + mParticipants.get(buf[4]).getDisplayName() + "!";
+                break;
+            case 3:
+                winner = "ASAF!!! the winners are: " + mParticipants.get(buf[3]).getDisplayName() + " and " + mParticipants.get(buf[4]).getDisplayName() + " and " + mParticipants.get(buf[5]).getDisplayName() + "!";
+                break;
+        }
+
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Game Over")
+                .setMessage(winner)
+                .show();
+
+        final TextView timer =  (TextView)(findViewById(R.id.countDownTimer));
+        timer.setVisibility(View.VISIBLE);
+        timer.setText("New game starts in: 10 seconds");
+
+        new CountDownTimer(30000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                timer.setText("New game starts in: " + millisUntilFinished / 1000 + " seconds");
+            }
+
+            public void onFinish() {
+                timer.setVisibility(View.GONE);
+                //showHighscore(winner);
+                onRoomConnected(mStatusCode, mRoom);
+            }
+        }.start();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -1181,7 +1249,6 @@ public class MainActivity extends Activity
         Log.d(TAG, "turn= " + turn + " mMsgBuf[3]=" + mMsgBuf[3]);
         mMsgBuf[4] = (byte) (myLastDropType);
 
-        tv.setText("" + turn);
         // Send to every other participant.
         for (Participant p : mParticipants) {
             if (p.getParticipantId().equals(mMyId))
@@ -1286,14 +1353,10 @@ public class MainActivity extends Activity
             (findViewById(R.id.deck_cards)).setClickable(true);
             (findViewById(R.id.my_drop)).setVisibility(View.VISIBLE);
 
-            ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
-            ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
-            ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
-            ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.VISIBLE);
-
-//            ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
-//            ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
-//            ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
+            ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+            ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+            ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+            ((Button) findViewById(R.id.myPlayIcon)).setVisibility(View.VISIBLE);
 
         } else {
             (findViewById(R.id.my_card_1)).setClickable(false);
@@ -1310,37 +1373,24 @@ public class MainActivity extends Activity
             (findViewById(R.id.my_drop)).setVisibility(View.GONE);
 
             if (isTurn(mParticipantPlayerPosition.get("top"))) {
-                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
-                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
-//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.BOLD);
-//                Log.d(TAG, "updateTurnUi: top: " +mParticipantPlayerPosition.get("top"));
-//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
-//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
+                ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
 
 
             } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
-                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
-                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
-//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.BOLD);
-//                Log.d(TAG, "updateTurnUi: left: " +mParticipantPlayerPosition.get("left"));
-//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
-//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.NORMAL);
+                ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button) findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
 
 
             } else {
-                ((Button)findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
-                ((Button)findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
-                ((Button)findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
-//                ((TextView)findViewById(R.id.rightName)).setTypeface(null, Typeface.BOLD);
-//                Log.d(TAG, "updateTurnUi: right: " +mParticipantPlayerPosition.get("right"));
-//                ((TextView)findViewById(R.id.topName)).setTypeface(null, Typeface.NORMAL);
-//                ((TextView)findViewById(R.id.leftName)).setTypeface(null, Typeface.NORMAL);
-
+                ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
+                ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+                ((Button) findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
 
             }
         }
@@ -1446,7 +1496,8 @@ public class MainActivity extends Activity
     void ownerInitial() {
         //((TextView) findViewById(R.id.owner)).setText("owner");
 
-        highscores = new int[mParticipants.size()];
+        if (highscores == null)
+            highscores = new int[mParticipants.size()];
         this.cardDeck = new Cards();
         this.primaryDeck = new Stack<>();
         // Add the first card to primary deck.
@@ -1524,6 +1575,10 @@ public class MainActivity extends Activity
     }
 
     public void updateParticipantsCardsOnGameOverUI() {
+        ((Button) findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+        ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+        ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+        ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
         Log.d(TAG, "updateParticipantsCardsOnGameOverUI()");
         int i;
         ImageView myCard;
@@ -1543,31 +1598,9 @@ public class MainActivity extends Activity
                     int drawable = cardsDrawable.get("" + mParticipantCards.get(id).get(i).getKey());
                     myCard = (ImageView) findViewById(arr[i]);
                     myCard.setImageResource(drawable);
-                    //         myCard.setVisibility(View.VISIBLE);
-
                 }
             }
         }
-
-/*
-        ImageView myCard;
-        for (i = 0; i < mParticipantCards.size(); i++) {
-            int drawable;
-            if (yaniv) {
-                drawable = cardsDrawable.get("" + mParticipantCards.get(pid).get(i).getKey());
-            } else {
-                drawable = R.drawable.pile_1;
-            }
-            myCard = (ImageView) findViewById(arr[i]);
-            myCard.setImageResource(drawable);
-            myCard.setVisibility(View.VISIBLE);
-
-        }
-        for (; i < 5; i++) {
-            myCard = (ImageView) findViewById(arr[i]);
-            myCard.setVisibility(View.GONE);
-        }*/
-
     }
 
     public void updateParticipantsNamesAndUI() {
@@ -1631,7 +1664,7 @@ public class MainActivity extends Activity
         for (Card card : myCards) {
             mySum += card.v;
         }
-        ((Button)(findViewById(R.id.button_score))).setText("Score: "+mySum);
+        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
 
     }
 
@@ -1860,28 +1893,49 @@ public class MainActivity extends Activity
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void declareYanivOnClick(View view) {
         //send a declare message to all participants.
         byte[] sendMsg = new byte[5];
         sendMsg[0] = (int) 7;
 
-        int asafCount = 0;
+        byte yanivCallerIndex = 0;
+        boolean isAsaf = false;
         int min = mySum;
         int thisGameScores[] = new int[mParticipants.size()];
-        for(int i = 0; i < mParticipants.size(); i++){
+        for (byte i = 0; i < mParticipants.size(); i++) {
             String pid = mParticipants.get(i).getParticipantId();
-            thisGameScores[i] = getPlayerScore(mParticipants.get(i));
-            if (pid.equals(mMyId)) {
-                int yanivCallerIndex = i;
+            if (!pid.equals(mMyId)) {
+                int score = getPlayerScore(mParticipants.get(i));
+                if (score <= min) {
+                    min = score;
+                    isAsaf = true;
+                }
             } else {
-                if (thisGameScores[i] <= min){
-                    min = thisGameScores[i];
+                yanivCallerIndex = i;
+            }
+        }
+        sendMsg[1] = yanivCallerIndex;
+
+        if (isAsaf) {
+            sendMsg[2] = 1;
+            int asafCount = 0;
+            for (byte i = 0; i < mParticipants.size(); i++) {
+                String pid = mParticipants.get(i).getParticipantId();
+                if (!pid.equals(mMyId)) {
+                    int score = getPlayerScore(mParticipants.get(i));
+                    if (score == min) {
+                        sendMsg[2 + ++asafCount] = i;
+                    }
                 }
             }
+        } else {
+            sendMsg[2] = 0;
         }
 
         messageToAllParticipants(sendMsg, true);
-        updateParticipantsCardsOnGameOverUI();
+        yanivCalled(sendMsg);
+        //   updateParticipantsCardsOnGameOverUI();
         // each participant "shows" his cards and his score UI
 
         //the game stop.
@@ -2115,7 +2169,7 @@ public class MainActivity extends Activity
 
     }
 
-    private int getPlayerScore(Participant p){
+    private int getPlayerScore(Participant p) {
         String id = p.getParticipantId();
         int sum = 0;
         for (Card card : mParticipantCards.get(id)) {
@@ -2124,7 +2178,7 @@ public class MainActivity extends Activity
         return sum;
     }
 
-    private void updateHighscores(){
+    private void updateHighscores() {
         int i = 0;
         for (Participant p : mParticipants) {
             String id = p.getParticipantId();
@@ -2137,18 +2191,15 @@ public class MainActivity extends Activity
     }
 
 
-
-    private String formatScoresToString(){
+    private String formatScoresToString() {
         String message = "";
 
-        for (Participant p : mParticipants) {
+        for (int i = 0; i < mParticipants.size(); i++) {
+            Participant p = mParticipants.get(i);
             String name = p.getDisplayName();
             String id = p.getParticipantId();
-            int sum = 0;
-            for (Card card : mParticipantCards.get(id)) {
-                sum += card.v;
-            }
-            message += name + ": " + sum +  System.getProperty("line.separator");
+            int sum = highscores[i];
+            message += name + ": " + sum + System.getProperty("line.separator");
         }
 
         return message;
@@ -2161,6 +2212,16 @@ public class MainActivity extends Activity
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Highscores")
                 .setMessage(formatScoresToString())
+                .show();
+
+    }
+
+    public void showHighscore(String winner) {
+
+        new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle("Highscores")
+                .setMessage(winner + "\n\n" + formatScoresToString())
                 .show();
 
     }
