@@ -175,19 +175,17 @@
 
         <LinearLayout
             android:id="@+id/myCardsLayout"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_marginBottom="8dp"
+            android:layout_width="300sp"
+            android:layout_height="100sp"
+            android:layout_marginBottom="16dp"
             android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintVertical_bias="0.982">
+            app:layout_constraintRight_toRightOf="parent">
 
             <ImageView
                 android:id="@+id/my_card_1"
@@ -397,99 +395,32 @@
             android:layout_width="80dp"
             android:layout_height="48dp"
             android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:onClick="declareYanivOnClick"
             android:text="Yaniv !"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/my_drop"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <ImageView
             android:id="@+id/deck_cards"
             android:layout_width="100dp"
             android:layout_height="80dp"
-            android:layout_centerInParent="true"
-            android:layout_marginBottom="8dp"
-            android:layout_marginRight="8dp"
             android:onClick="cardDeckOnClick"
-            android:src="@drawable/pile_1"
-            app:layout_constraintVertical_bias="0.932"
+            android:src="@drawable/card_deck"
             app:layout_constraintVertical_chainStyle="packed"
-            android:layout_marginLeft="8dp"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintTop_toTopOf="@+id/topPlayIcon"
-            android:layout_marginTop="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/dropped_cards" />
-
-        <LinearLayout
-            android:id="@+id/dropped_cards"
-            android:layout_width="180dp"
-            android:layout_height="80dp"
-            android:layout_below="@id/deck_cards"
-            android:layout_centerInParent="true"
-
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.498"
-            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginTop="140dp"
             app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp">
-
-            <ImageView
-                android:id="@+id/dropped_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="dropedCard1OnClick" />/ android:src="@drawable/c_1_of_clubs" />
-
-            <ImageView
-                android:id="@+id/dropped_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="dropedCard2OnClick" />/ android:src="@drawable/c_4_of_spades"
-            />
-
-            <ImageView
-                android:id="@+id/dropped_3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="dropedCard3OnClick" /><![CDATA[/   android:src="@drawable/c_8_of_clubs" />
-
-            /    android:src="@drawable/c_5_of_diamonds" />
-
-            ]]>
-
-            <ImageView
-                android:id="@+id/dropped_4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="dropedCard4OnClick" />
-
-            <ImageView
-                android:id="@+id/dropped_5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="dropedCard5OnClick" />/
-            android:src="@drawable/c_12_of_diamonds" />
-        </LinearLayout>
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.091" />
 
         <LinearLayout
             android:id="@+id/player_right"
@@ -665,79 +596,80 @@
 
         <Button
             android:id="@+id/button_score"
-            android:layout_width="107dp"
-            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="127dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:elegantTextHeight="true"
             android:gravity="center_horizontal|center"
             android:text="Score:"
             android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_bias="0.089"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/my_drop"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/button_highscores"
-            android:layout_width="107dp"
-            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="127dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:elegantTextHeight="true"
             android:gravity="center_horizontal|center"
+            android:onClick="showHighscore"
             android:text="Highscores"
             android:textSize="12sp"
-            android:onClick="showHighscore"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.387"
+            app:layout_constraintHorizontal_bias="0.347"
             app:layout_constraintLeft_toRightOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/my_drop"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/leftPlayIcon"
-            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="170dp"
             android:layout_marginTop="8dp"
+            android:clickable="false"
             android:text="Playing"
             android:visibility="gone"
-            android:clickable="false"
             app:layout_constraintBottom_toBottomOf="@+id/myCardsLayout"
             app:layout_constraintHorizontal_bias="0.019"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="@+id/topName"
-            app:layout_constraintVertical_bias="0.6"
-            tools:text="Playing" />
+            app:layout_constraintVertical_bias="0.6" />
 
         <Button
             android:id="@+id/myPlayIcon"
             style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Your Turn"
-            android:visibility="gone"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
             android:clickable="false"
+            android:text="Your  Turn"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.028"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.662" />
+            app:layout_constraintVertical_bias="0.649" />
 
         <Button
             android:id="@+id/rightPlayIcon"
@@ -791,6 +723,68 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="@+id/topPlayIcon"
             app:layout_constraintVertical_bias="0.614" />
+
+        <LinearLayout
+            android:id="@+id/dropped_cards"
+            android:layout_width="180dp"
+            android:layout_height="80dp"
+            android:layout_below="@id/deck_cards"
+            android:layout_centerInParent="true"
+
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/deck_cards"
+            app:layout_constraintVertical_bias="0.004">
+
+            <ImageView
+                android:id="@+id/dropped_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="dropedCard1OnClick" />/ android:src="@drawable/c_1_of_clubs" />
+
+            <ImageView
+                android:id="@+id/dropped_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="dropedCard2OnClick" />/ android:src="@drawable/c_4_of_spades"
+            />
+
+            <ImageView
+                android:id="@+id/dropped_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="dropedCard3OnClick" /><![CDATA[/   android:src="@drawable/c_8_of_clubs" />
+
+            /    android:src="@drawable/c_5_of_diamonds" />
+
+            ]]>
+
+            <ImageView
+                android:id="@+id/dropped_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="dropedCard4OnClick" />
+
+            <ImageView
+                android:id="@+id/dropped_5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="dropedCard5OnClick" />/
+            android:src="@drawable/c_12_of_diamonds" />
+        </LinearLayout>
 
 
     </android.support.constraint.ConstraintLayout>

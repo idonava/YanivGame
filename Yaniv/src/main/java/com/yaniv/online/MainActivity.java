@@ -28,10 +28,12 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -131,6 +133,9 @@ public class MainActivity extends Activity
     int cardsLeftID[] = {R.id.player_left_card_1, R.id.player_left_card_2, R.id.player_left_card_3, R.id.player_left_card_4, R.id.player_left_card_5};
     int droppedID[] = {R.id.dropped_1, R.id.dropped_2, R.id.dropped_3, R.id.dropped_4, R.id.dropped_5};
 
+    private int myCardWidthParam;
+    private int sidesCardHeightParam;
+    private int topCardWidthParam;
     private int[] highscores;
     int mStatusCode;
     Room mRoom;
@@ -159,7 +164,7 @@ public class MainActivity extends Activity
 
     //*/*/*/*/*/*  Yaniv  */*/*/*/*/*/
     private boolean firstRound = true;
-    private int turn = 0;
+    private int turn;
     //True if the participant is the owner of the game
     private boolean owner = false;
     private int numOfMessages = 0;
@@ -207,6 +212,8 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        updateLayoutParams();
+
         // Create the Google Api Client with access to Games
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -219,6 +226,28 @@ public class MainActivity extends Activity
             findViewById(id).setOnClickListener(this);
         }
         initialCardsDrawable();
+    }
+
+    private void updateLayoutParams(){
+
+        // Save my layout size
+        LinearLayout layout = (LinearLayout) findViewById(R.id.myCardsLayout);
+        // Gets the layout params that will allow you to resize the layout
+        ViewGroup.LayoutParams params = layout.getLayoutParams();
+        myCardWidthParam = params.width / 5;
+
+        // Save top player layout size
+        layout = (LinearLayout) findViewById(R.id.player_top);
+        // Gets the layout params that will allow you to resize the layout
+        params = layout.getLayoutParams();
+        topCardWidthParam = params.width / 5;
+
+        // Save sides player layout size
+        layout = (LinearLayout) findViewById(R.id.leftParentLayout);
+        // Gets the layout params that will allow you to resize the layout
+        params = layout.getLayoutParams();
+        sidesCardHeightParam = params.height / 5;
+
     }
 
     @Override
@@ -648,7 +677,7 @@ public class MainActivity extends Activity
 
         mStatusCode = statusCode;
         mRoom = room;
-
+        turn = 0;
         myCards = new Vector<>();
         initialAllVal();
         //participantsCards = new Vector<Vector<Card>>();
@@ -1012,7 +1041,6 @@ public class MainActivity extends Activity
 
             mParticipantCards.put(sender, (Vector<Card>) fromGson(buf, 5, buf.length, DATA_TYPE_MY_CARDS));
             Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished is turn, his new cards:" + mParticipantCards.get(sender));
-            updatePeerScoresDisplay();  //temp - needs to update ONLY the sender.
             updateParticipantUI(sender);
             //  updateCardDeck();
         }
@@ -1024,6 +1052,7 @@ public class MainActivity extends Activity
             if (primaryDeck != null) {
                 //  ((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
                 updatePrimaryDeckUI();
+                // updatePeerScoresDisplay();  //temp - needs to update ONLY the sender.
             }
         }
         //when player declare yaniv
@@ -1058,7 +1087,7 @@ public class MainActivity extends Activity
                 turn = (int) buf[3];
                 lastDropType = (int) buf[4];
                 // update the scores on the screen
-                updatePeerScoresDisplay();
+                //updatePeerScoresDisplay();
 
                 // if it's a final score, mark this participant as having finished
                 // the game
@@ -1104,7 +1133,7 @@ public class MainActivity extends Activity
         updateParticipantsCardsOnGameOverUI();
 
         String winner = "";
-        switch(buf[2]){
+        switch (buf[2]) {
             case 0:
                 winner = "The winner is: " + mParticipants.get(buf[3]).getDisplayName() + "!";
                 break;
@@ -1125,7 +1154,7 @@ public class MainActivity extends Activity
                 .setMessage(winner)
                 .show();
 
-        final TextView timer =  (TextView)(findViewById(R.id.countDownTimer));
+        final TextView timer = (TextView) (findViewById(R.id.countDownTimer));
         timer.setVisibility(View.VISIBLE);
         timer.setText("New game starts in: 10 seconds");
 
@@ -1137,7 +1166,6 @@ public class MainActivity extends Activity
 
             public void onFinish() {
                 timer.setVisibility(View.GONE);
-                //showHighscore(winner);
                 onRoomConnected(mStatusCode, mRoom);
             }
         }.start();
@@ -1209,6 +1237,7 @@ public class MainActivity extends Activity
             myCard = (ImageView) findViewById(droppedID[i]);
             myCard.setVisibility(View.GONE);
         }
+        updatePeerScoresDisplay();
     }
 
 
@@ -1352,6 +1381,7 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(true);
             (findViewById(R.id.deck_cards)).setClickable(true);
             (findViewById(R.id.my_drop)).setVisibility(View.VISIBLE);
+            checkYanivOpportunity();
 
             ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
             ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
@@ -1430,7 +1460,7 @@ public class MainActivity extends Activity
         Log.d(TAG, "updateTurnUi: myid: " + mMyId);
         Log.d(TAG, "updateTurnUi: turn: " + turn);
         updateMyUI();
-        updatePeerScoresDisplay();
+        //updatePeerScoresDisplay();
 
 /*
         if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
@@ -1517,6 +1547,15 @@ public class MainActivity extends Activity
     public void updateMyUI() {
         int i;
         ImageView myCard;
+
+        // Gets linearlayout
+        LinearLayout layout = (LinearLayout) findViewById(R.id.myCardsLayout);
+        // Gets the layout params that will allow you to resize the layout
+        ViewGroup.LayoutParams params = layout.getLayoutParams();
+        // Changes the height and width to the specified *pixels*
+        params.width = myCards.size() * myCardWidthParam;
+        layout.setLayoutParams(params);
+
         for (i = 0; i < myCards.size(); i++) {
             int drawable = cardsDrawable.get("" + myCards.get(i).getKey());
             myCard = (ImageView) findViewById(cardsID[i]);
@@ -1528,13 +1567,6 @@ public class MainActivity extends Activity
             myCard = (ImageView) findViewById(cardsID[i]);
             myCard.setVisibility(View.GONE);
         }
-        checkYanivOpportunity();
-        //     myCard = (ImageView) findViewById(cardsID[0]);
-        //   myCard.setImageResource(R.drawable.c_2_of_diamonds);
-   /*     Log.d(TAG, "int_resource: " + this.getResources().getIdentifier("drawable/" + myCards.get(0).getResourceName(), "drawable", getPackageName()));
-        Log.d(TAG, "int_arr: " + cardsID[0]);
-        Log.d(TAG, ": " + myCards.get(0).getResourceName());*/
-
     }
 
     public void updateParticipantUI(String pid) {
@@ -1546,13 +1578,23 @@ public class MainActivity extends Activity
         Log.d(TAG, "updateParticipantUI() - pid - " + pid);
 
         if (mParticipantPlayerPosition.get("top").equals(pid)) {
+            LinearLayout layout = (LinearLayout) findViewById(R.id.player_top);
+            ViewGroup.LayoutParams params = layout.getLayoutParams();
+            params.width = mParticipantCards.get(pid).size() * topCardWidthParam;
+            layout.setLayoutParams(params);
             arr = cardsTopID;
         } else if (mParticipantPlayerPosition.get("left").equals(pid)) {
+            LinearLayout layout = (LinearLayout) findViewById(R.id.leftParentLayout);
+            ViewGroup.LayoutParams params = layout.getLayoutParams();
+            params.height = mParticipantCards.get(pid).size() * sidesCardHeightParam;
+            layout.setLayoutParams(params);
             arr = cardsLeftID;
-
         } else {
+            LinearLayout layout = (LinearLayout) findViewById(R.id.player_right);
+            ViewGroup.LayoutParams params = layout.getLayoutParams();
+            params.height = mParticipantCards.get(pid).size() * sidesCardHeightParam;
+            layout.setLayoutParams(params);
             arr = cardsRightID;
-
         }
         ImageView myCard;
         for (i = 0; i < mParticipantCards.get(pid).size(); i++) {
@@ -1579,6 +1621,7 @@ public class MainActivity extends Activity
         ((Button) findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
         ((Button) findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
         ((Button) findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+        ((Button) findViewById(R.id.yaniv_declare)).setVisibility(View.GONE);
         Log.d(TAG, "updateParticipantsCardsOnGameOverUI()");
         int i;
         ImageView myCard;
@@ -1885,14 +1928,6 @@ public class MainActivity extends Activity
         return integerTokens;
     }
 
-    public void checkYanivOpportunity() {
-        if (mySum <= yanivMinScore) {
-            ((findViewById(R.id.yaniv_declare))).setVisibility(View.VISIBLE);
-        } else {
-            ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
-        }
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void declareYanivOnClick(View view) {
         //send a declare message to all participants.
@@ -1931,6 +1966,7 @@ public class MainActivity extends Activity
             }
         } else {
             sendMsg[2] = 0;
+            sendMsg[3] = yanivCallerIndex;
         }
 
         messageToAllParticipants(sendMsg, true);
@@ -1939,6 +1975,14 @@ public class MainActivity extends Activity
         // each participant "shows" his cards and his score UI
 
         //the game stop.
+    }
+
+    public void checkYanivOpportunity() {
+        if (mySum <= yanivMinScore) {
+            ((findViewById(R.id.yaniv_declare))).setVisibility(View.VISIBLE);
+        } else {
+            ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
+        }
     }
 
     public String getMyCardsWithVal() {
@@ -2178,19 +2222,6 @@ public class MainActivity extends Activity
         return sum;
     }
 
-    private void updateHighscores() {
-        int i = 0;
-        for (Participant p : mParticipants) {
-            String id = p.getParticipantId();
-            int sum = 0;
-            for (Card card : mParticipantCards.get(id)) {
-                sum += card.v;
-            }
-            highscores[i++] += sum;
-        }
-    }
-
-
     private String formatScoresToString() {
         String message = "";
 
@@ -2212,16 +2243,6 @@ public class MainActivity extends Activity
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle("Highscores")
                 .setMessage(formatScoresToString())
-                .show();
-
-    }
-
-    public void showHighscore(String winner) {
-
-        new AlertDialog.Builder(this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle("Highscores")
-                .setMessage(winner + "\n\n" + formatScoresToString())
                 .show();
 
     }
