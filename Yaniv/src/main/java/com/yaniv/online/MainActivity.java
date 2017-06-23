@@ -228,7 +228,7 @@ public class MainActivity extends Activity
         initialCardsDrawable();
     }
 
-    private void updateLayoutParams(){
+    private void updateLayoutParams() {
 
         // Save my layout size
         LinearLayout layout = (LinearLayout) findViewById(R.id.myCardsLayout);
@@ -674,23 +674,21 @@ public class MainActivity extends Activity
     // Called when room is fully connected.
     @Override
     public void onRoomConnected(int statusCode, Room room) {
+        Log.d(TAG, "onRoomConnected(" + statusCode + ", " + room + ")");
 
         mStatusCode = statusCode;
         mRoom = room;
         turn = 0;
         myCards = new Vector<>();
         initialAllVal();
-        //participantsCards = new Vector<Vector<Card>>();
         if (getOwnerId().equals(mMyId)) {
             owner = true;
             ownerInitial();
             updateTurnUi();
         } else {
             owner = false;
-
-
         }
-        Log.d(TAG, "onRoomConnected(" + statusCode + ", " + room + ")");
+
         if (statusCode != GamesStatusCodes.STATUS_OK) {
             Log.e(TAG, "*** Error: onRoomConnected, status " + statusCode);
             showGameError();
@@ -700,28 +698,24 @@ public class MainActivity extends Activity
         lastDropType = 1;
 
         updateRoom(room);
-        //Create new suffle deck.
+        //Create new shuffle deck.
         if (owner) {
             try {
-                Thread.sleep(1500);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            //   cardDeck = new Cards();
             Log.d(TAG, "cards(: " + cardDeck.jp);
 
-            //  createParticipantsCards();
             //Sending the participants cards.
             sendParticipantsCardsToAllParticipants();
 
             updateMyUI();
-            // updatePlayersUI();
 
             //Sending the card deck to all participant
             sendCardDeckToAllParticipants();
             sendPrimaryDeckToAllParticipants();
             //update all participant cards ui
-
             updateParticipantsNamesAndUI();
 
         }
@@ -730,7 +724,6 @@ public class MainActivity extends Activity
 
     private void sendPrimaryDeckToAllParticipants() {
         Log.d(TAG, "sendPrimaryDeckToAllParticipants() " + primaryDeck);
-
 
         byte[] b = new byte[0];
 
@@ -746,7 +739,6 @@ public class MainActivity extends Activity
         }
         messageToAllParticipants(sendMsg, true);
         updatePrimaryDeckUI();
-        //((TextView) findViewById(R.id.primary_deck)).setText("" + primaryDeck.peek());
     }
 
     private void sendMyCardsToAllParticipants() {
@@ -804,7 +796,6 @@ public class MainActivity extends Activity
         }
         messageToAllParticipants(sendMsg, true);
 
-        //   ((TextView) findViewById(R.id.card_deck)).setText("" + cardDeck.jp);
     }
 
 
@@ -935,12 +926,8 @@ public class MainActivity extends Activity
     // Start the gameplay phase of the game.
     void startGame(boolean multiplayer) {
         mMultiplayer = multiplayer;
-        //    updateScoreDisplay();
         updateMyUI();
-        // broadcastScore(false);
         switchToScreen(R.id.screen_game);
-
-        //findViewById(R.id.button_click_me).setVisibility(View.VISIBLE);
 
         // run the gameTick() method every second to update the game.
         final Handler h = new Handler();
@@ -975,16 +962,14 @@ public class MainActivity extends Activity
             return;
         }
 
-        if (mSecondsLeft <= 0)
-            return; // too late!
-        ++mScore;
+//        if (mSecondsLeft <= 0)
+//            return; // too late!
+//        ++mScore;
         calculateSum();
         updateMyUI();
-        // updateScoreDisplay();
-        //   updatePeerScoresDisplay();
 
         // broadcast our new score to our peers
-        broadcastScore(false);
+        broadcastScore(true);
         sendCardDeckToAllParticipants();
         sendMyCardsToAllParticipants();
         sendPrimaryDeckToAllParticipants();
@@ -1040,9 +1025,8 @@ public class MainActivity extends Activity
         else if ((int) buf[0] == 2) {
 
             mParticipantCards.put(sender, (Vector<Card>) fromGson(buf, 5, buf.length, DATA_TYPE_MY_CARDS));
-            Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished is turn, his new cards:" + mParticipantCards.get(sender));
+            Log.d(TAG, "[onRealTimeMessageReceived] -participant " + sender + " finished his turn, his new cards: " + mParticipantCards.get(sender));
             updateParticipantUI(sender);
-            //  updateCardDeck();
         }
         // take from 0-primary 1-deck           take from the primary or deck (and update in each screen)
         // Cards he take (only if 0)
@@ -1171,23 +1155,6 @@ public class MainActivity extends Activity
         }.start();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-    private void lockAllButtons() {
-        (findViewById(R.id.my_card_1)).setClickable(false);
-        (findViewById(R.id.my_card_2)).setClickable(false);
-        (findViewById(R.id.my_card_3)).setClickable(false);
-        (findViewById(R.id.my_card_4)).setClickable(false);
-        (findViewById(R.id.my_card_5)).setClickable(false);
-        (findViewById(R.id.dropped_1)).setClickable(false);
-        (findViewById(R.id.dropped_3)).setClickable(false);
-        (findViewById(R.id.dropped_2)).setClickable(false);
-        (findViewById(R.id.dropped_4)).setClickable(false);
-        (findViewById(R.id.dropped_5)).setClickable(false);
-        (findViewById(R.id.deck_cards)).setClickable(false);
-        (findViewById(R.id.my_drop)).setVisibility(View.GONE);
-        removeHighLightFromCards();
-    }
-
     private void setPlayerPositonUI() {
         Log.d(TAG, "setPlayerPositonUI()");
 
@@ -1199,24 +1166,21 @@ public class MainActivity extends Activity
                 if (!top) {
                     mParticipantPlayerPosition.put("top", p.getParticipantId());
                     Log.d(TAG, "setPlayerPositonUI() - top - " + p.getParticipantId() + " - " + p.getDisplayName());
-
                     top = true;
                 } else if (!left) {
                     mParticipantPlayerPosition.put("left", p.getParticipantId());
                     Log.d(TAG, "setPlayerPositonUI() - left - " + p.getParticipantId() + " - " + p.getDisplayName());
-
                     left = true;
                 } else {
                     mParticipantPlayerPosition.put("right", p.getParticipantId());
                 }
             }
         }
-        for (int i = 0; i < cardsTopID.length; i++) {
-            (findViewById(cardsTopID[i])).setClickable(false);
-            (findViewById(cardsLeftID[i])).setClickable(false);
-            (findViewById(cardsRightID[i])).setClickable(false);
-        }
-
+//        for (int i = 0; i < cardsTopID.length; i++) {
+//            (findViewById(cardsTopID[i])).setClickable(false);
+//            (findViewById(cardsLeftID[i])).setClickable(false);
+//            (findViewById(cardsRightID[i])).setClickable(false);
+//        }
 
     }
 
@@ -1351,19 +1315,6 @@ public class MainActivity extends Activity
         }
     }
 
-    // updates the label that shows my score
-    void updateScoreDisplay() {
-        //  ((TextView) findViewById(R.id.my_score)).setText(formatScore(mScore));
-    }
-
-    // formats a score as a three-digit number
-    String formatScore(int i) {
-        if (i < 0)
-            i = 0;
-        String s = String.valueOf(i);
-        return s.length() == 1 ? "00" + s : s.length() == 2 ? "0" + s : s;
-    }
-
     // updates the screen with the scores from our peers
     void updatePeerScoresDisplay() {
         Log.d(TAG, "updatePeerScoresDisplay() ");
@@ -1425,7 +1376,6 @@ public class MainActivity extends Activity
             }
         }
 
-
     }
 
     /*
@@ -1460,21 +1410,7 @@ public class MainActivity extends Activity
         Log.d(TAG, "updateTurnUi: myid: " + mMyId);
         Log.d(TAG, "updateTurnUi: turn: " + turn);
         updateMyUI();
-        //updatePeerScoresDisplay();
 
-/*
-        if (!mParticipants.get(turn).getParticipantId().equals(mMyId)) {
-            ((TextView) findViewById(R.id.button_click_me)).setText("Wait for your turn");
-            findViewById(R.id.button_click_me).setEnabled(false);
-            ((TextView) findViewById(R.id.score0)).setText(formatScore(mScore) + " - Me - " + myCards);
-            return false;
-        } else {
-            findViewById(R.id.button_click_me).setEnabled(true);
-            ((TextView) findViewById(R.id.button_click_me)).setText("Play");
-            ((TextView) findViewById(R.id.score0)).setText("-> " + formatScore(mScore) + " - Me - " + myCards);
-            return true;
-        }
-        */
         return true;
     }
 
@@ -1482,14 +1418,13 @@ public class MainActivity extends Activity
     boolean isTurn(String participant) {
         if (!mParticipants.get(turn).getParticipantId().equals(participant)) {
             Log.d(TAG, "myTurn=false");
-
             return false;
-        } else {
-            Log.d(TAG, "myTurn=true");
-
-            return true;
         }
+
+        Log.d(TAG, "myTurn=true");
+        return true;
     }
+
 
     public static byte[] toByte(Object obj) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -1509,13 +1444,11 @@ public class MainActivity extends Activity
         myCards = new Vector<>();
         mySum = 0;
         lastDropType = 0;
-        //  mParticipantScore = new HashMap<String, Integer>();
-        mParticipantCards = new HashMap<String, Vector<Card>>();
-        //  mFinishedParticipants = new HashSet<String>();
+        mParticipantCards = new HashMap<>();
         primaryDeck = new Stack<>();
         cardDeck = new Cards();
-        mParticipantScore = new HashMap<String, Integer>();
-        mParticipantPlayerPosition = new HashMap<String, String>();
+        mParticipantScore = new HashMap<>();
+        mParticipantPlayerPosition = new HashMap<>();
         myCardsDrop = new Vector<>();
         myCardsDropToString = new Vector<>();
         yaniv = false;
@@ -1524,7 +1457,6 @@ public class MainActivity extends Activity
     //Owner Functions
     //First Initial
     void ownerInitial() {
-        //((TextView) findViewById(R.id.owner)).setText("owner");
 
         if (highscores == null)
             highscores = new int[mParticipants.size()];
@@ -1541,10 +1473,15 @@ public class MainActivity extends Activity
         // Division card to participants.
         createParticipantsCards();
 
-
     }
 
     public void updateMyUI() {
+
+        if (myCards == null) {
+            Log.d(TAG, "Call on null object - myCards");
+            return;
+        }
+
         int i;
         ImageView myCard;
 
@@ -1631,13 +1568,25 @@ public class MainActivity extends Activity
                 for (i = 0; i < mParticipantCards.get(id).size(); i++) {
                     int arr[];
                     if (mParticipantPlayerPosition.get("top").equals(id)) {
+                        LinearLayout layout = (LinearLayout) findViewById(R.id.player_top);
+                        ViewGroup.LayoutParams params = layout.getLayoutParams();
+                        params.width = mParticipantCards.get(id).size() * topCardWidthParam;
+                        layout.setLayoutParams(params);
                         arr = cardsTopID;
                     } else if (mParticipantPlayerPosition.get("left").equals(id)) {
+                        LinearLayout layout = (LinearLayout) findViewById(R.id.leftParentLayout);
+                        ViewGroup.LayoutParams params = layout.getLayoutParams();
+                        params.height = mParticipantCards.get(id).size() * sidesCardHeightParam;
+                        layout.setLayoutParams(params);
                         arr = cardsLeftID;
-
                     } else {
+                        LinearLayout layout = (LinearLayout) findViewById(R.id.player_right);
+                        ViewGroup.LayoutParams params = layout.getLayoutParams();
+                        params.height = mParticipantCards.get(id).size() * sidesCardHeightParam;
+                        layout.setLayoutParams(params);
                         arr = cardsRightID;
                     }
+
                     int drawable = cardsDrawable.get("" + mParticipantCards.get(id).get(i).getKey());
                     myCard = (ImageView) findViewById(arr[i]);
                     myCard.setImageResource(drawable);
@@ -1661,12 +1610,10 @@ public class MainActivity extends Activity
 
                 if (mParticipantPlayerPosition.get("top").equals(p.getParticipantId())) {
                     ((TextView) findViewById(R.id.topName)).setText(p.getDisplayName());
-
                 } else if (mParticipantPlayerPosition.get("left").equals(p.getParticipantId())) {
                     ((TextView) findViewById(R.id.leftName)).setText(p.getDisplayName());
                 } else {
                     ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
-
                 }
             }
         }
