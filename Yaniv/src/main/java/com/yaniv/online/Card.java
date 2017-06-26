@@ -32,9 +32,6 @@ public class Card implements Comparable<Card> {
     public String getKey() {
         return "" + n + s;
     }
- /*   public String getResourceName() {
-        return resourceName;
-    }*/
 
     public Card(int num, char symbol) {
         this.n = num;
@@ -46,35 +43,25 @@ public class Card implements Comparable<Card> {
         } else {
             this.v = num;
         }
-      /*  resourceName += "c_";
-
-        if (n == 14) {
-            v = 0;
-            resourceName = n + "_of_black";
-        } else if (n == 15) {
-            v = 0;
-            resourceName = n + "_of_red";
-        } else {
-            resourceName = n + "_of_";
-            if (s == '\u2764') { //hearts.
-                resourceName += "hearts";
-
-            } else if (s == '\u2660') {//spades.
-                resourceName += "spades";
-
-            } else if (s == '\u2666') {//diamonds
-                resourceName += "diamonds";
-
-            } else {//clubs
-                resourceName += "clubs";
-            }
-        }*/
     }
-
 
     @Override
     public String toString() {
         return "" + n + s;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Card other = (Card) obj;
+        if ((n != other.n) || (s != other.s))
+            return false;
+        return true;
     }
 
     @Override
