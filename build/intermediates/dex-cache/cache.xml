@@ -10,14 +10,5 @@
         sha1="c44681171eca986d3771e736177cd7f3c1c91dad">
         <dex dex="C:\Users\Ido\Downloads\android-basic-samples-master (4)\android-basic-samples-master\YanivGame\Yaniv\build\intermediates\pre-dexed\debug\classes_8a3f980cb34fbc8dc2d5b85adf8c0f6e11f8f5b7.jar" />
     </item>
-    <item
-        is-multidex="false"
-        jar="C:\Users\Ido\.gradle\caches\modules-2\files-2.1\com.google.code.gson\gson\2.8.0\c4ba5371a29ac9b2ad6129b1d39ea38750043eff\gson-2.8.0.jar"
-        jumboMode="false"
-        optimize="true"
-        revision="25.0.3"
-        sha1="c4ba5371a29ac9b2ad6129b1d39ea38750043eff">
-        <dex dex="C:\Users\Ido\Downloads\android-basic-samples-master (4)\android-basic-samples-master\YanivGame\Yaniv\build\intermediates\pre-dexed\debug\gson-2.8.0_da6a34ae39356a0c2c2d939a6dee4b4900314446.jar" />
-    </item>
 
 </items>

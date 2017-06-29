@@ -117,6 +117,7 @@ public class MainActivity extends Activity
 
     // The participants in the currently active game
     ArrayList<Participant> mParticipants = null;
+    static ArrayList<PCPlayer> mPCParticipants = null;
 
     // My participant ID in the currently active game
     String mMyId = null;
@@ -159,7 +160,7 @@ public class MainActivity extends Activity
     byte[] mMsgBuf = new byte[5];
 
     //*/*/*/*/*/*  Yaniv  */*/*/*/*/*/
-    private byte turn;
+    private static byte turn;
     //True if the participant is the owner of the game
     private boolean owner = false;
     private static final Type DATA_TYPE_M_PARTICIPANT_CARDS =
@@ -179,12 +180,12 @@ public class MainActivity extends Activity
             }.getType();
 
     //Participants common objects
-    private Stack<ArrayList<Card>> primaryDeck;
-    private Cards cardDeck;
+    private static Stack<ArrayList<Card>> primaryDeck;
+    private static Cards cardDeck;
 
     // Score of other participants. We update this as we receive their scores
     // from the network.
-    Map<String, Vector<Card>> mParticipantCards = new HashMap<>();
+    static Map<String, Vector<Card>> mParticipantCards = new HashMap<>();
     Map<String, String> mParticipantPlayerPosition = new HashMap<>();
 
     // Participants who sent us their final score.
@@ -245,6 +246,7 @@ public class MainActivity extends Activity
             case R.id.button_single_player_2:
                 // play a single-player game
                 resetGameVars();
+
                 startGame(false);
                 break;
             case R.id.button_sign_in:
@@ -260,6 +262,7 @@ public class MainActivity extends Activity
                 Log.d(TAG, "Sign-in button clicked");
                 mSignInClicked = true;
                 mGoogleApiClient.connect();
+                 mMultiplayer=true;
                 break;
             case R.id.button_sign_out:
                 // user wants to sign out
@@ -269,28 +272,38 @@ public class MainActivity extends Activity
                 Games.signOut(mGoogleApiClient);
                 mGoogleApiClient.disconnect();
                 switchToScreen(R.id.screen_sign_in);
+                mMultiplayer=true;
+
                 break;
             case R.id.button_invite_players:
                 // show list of invitable players
                 intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 3);
                 switchToScreen(R.id.screen_wait);
                 startActivityForResult(intent, RC_SELECT_PLAYERS);
+                mMultiplayer=true;
+
                 break;
             case R.id.button_see_invitations:
                 // show list of pending invitations
                 intent = Games.Invitations.getInvitationInboxIntent(mGoogleApiClient);
                 switchToScreen(R.id.screen_wait);
                 startActivityForResult(intent, RC_INVITATION_INBOX);
+                mMultiplayer=true;
+
                 break;
             case R.id.button_accept_popup_invitation:
                 // user wants to accept the invitation shown on the invitation popup
                 // (the one we got through the OnInvitationReceivedListener).
                 acceptInviteToRoom(mIncomingInvitationId);
                 mIncomingInvitationId = null;
+                mMultiplayer=true;
+
                 break;
             case R.id.button_quick_game:
                 // user wants to play against a random opponent right now
                 startQuickGame();
+                mMultiplayer=true;
+
                 break;
 
         }
@@ -298,6 +311,7 @@ public class MainActivity extends Activity
 
 
     void startQuickGame() {
+        mMultiplayer = true;
         // quick-start a game with 1 randomly selected opponent
         final int MIN_OPPONENTS = 1, MAX_OPPONENTS = 1;
         Bundle autoMatchCriteria = RoomConfig.createAutoMatchCriteria(MIN_OPPONENTS,
@@ -793,18 +807,30 @@ public class MainActivity extends Activity
         }
         calculateSum();
         mParticipantCards.put(mMyId, myCards);
+        if (mMultiplayer) {
+            for (Participant p : mParticipants) {
+                if (p.getParticipantId().equals(mMyId))
+                    continue;
+                if (p.getStatus() != Participant.STATUS_JOINED)
+                    continue;
+                else {
+                    Vector<Card> v = new Vector<>();
+                    for (int j = 0; j < 5; j++) {
+                        v.add(cardDeck.jp.remove(0));
+                    }
+                    mParticipantCards.put(p.getParticipantId(), v);
+                }
+            }
+        } else {
+            for (PCPlayer p : mPCParticipants) {
 
-        for (Participant p : mParticipants) {
-            if (p.getParticipantId().equals(mMyId))
-                continue;
-            if (p.getStatus() != Participant.STATUS_JOINED)
-                continue;
-            else {
                 Vector<Card> v = new Vector<>();
                 for (int j = 0; j < 5; j++) {
                     v.add(cardDeck.jp.remove(0));
                 }
                 mParticipantCards.put(p.getParticipantId(), v);
+                p.setCards(v);
+
             }
         }
     }
@@ -910,7 +936,12 @@ public class MainActivity extends Activity
         mMultiplayer = multiplayer;
         drawMyCards();
         switchToScreen(R.id.screen_game);
+        if (!mMultiplayer) {
+            Log.d(TAG, "singlePlayer()");
+            mMyId = "ID";
+            getNumOfPC();
 
+        }
         // run the gameTick() method every second to update the game.
         final Handler h = new Handler();
         h.postDelayed(new Runnable() {
@@ -953,7 +984,13 @@ public class MainActivity extends Activity
         updatePrimaryDeckUI();
 
         // broadcast our new score to our peers
-        updatePlayersOnTurnFinish(pickedCardIndex, myDrop);
+        if (mMultiplayer) {
+            updatePlayersOnTurnFinish(pickedCardIndex, myDrop);
+        } else {
+
+            turn = (byte) (++turn % (mPCParticipants.size() + 1));
+            updateTurnGUI();
+        }
 
 //        broadcastScore(true);
 //        sendCardDeckToAllParticipants();
@@ -1182,19 +1219,38 @@ public class MainActivity extends Activity
 
         boolean top = false;
         boolean left = false;
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
+        if (mMultiplayer) {
+            for (Participant p : mParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
 
-                if (!top) {
-                    mParticipantPlayerPosition.put("top", p.getParticipantId());
-                    Log.d(TAG, "setPlayerPositonUI() - top - " + p.getParticipantId() + " - " + p.getDisplayName());
-                    top = true;
-                } else if (!left) {
-                    mParticipantPlayerPosition.put("left", p.getParticipantId());
-                    Log.d(TAG, "setPlayerPositonUI() - left - " + p.getParticipantId() + " - " + p.getDisplayName());
-                    left = true;
-                } else {
-                    mParticipantPlayerPosition.put("right", p.getParticipantId());
+                    if (!top) {
+                        mParticipantPlayerPosition.put("top", p.getParticipantId());
+                        Log.d(TAG, "setPlayerPositonUI() - top - " + p.getParticipantId() + " - " + p.getDisplayName());
+                        top = true;
+                    } else if (!left) {
+                        mParticipantPlayerPosition.put("left", p.getParticipantId());
+                        Log.d(TAG, "setPlayerPositonUI() - left - " + p.getParticipantId() + " - " + p.getDisplayName());
+                        left = true;
+                    } else {
+                        mParticipantPlayerPosition.put("right", p.getParticipantId());
+                    }
+                }
+            }
+        } else {
+            for (PCPlayer p : mPCParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
+
+                    if (!top) {
+                        mParticipantPlayerPosition.put("top", p.getParticipantId());
+                        Log.d(TAG, "setPlayerPositonUI() - top - " + p.getParticipantId() + " - " + p.getDisplayName());
+                        top = true;
+                    } else if (!left) {
+                        mParticipantPlayerPosition.put("left", p.getParticipantId());
+                        Log.d(TAG, "setPlayerPositonUI() - left - " + p.getParticipantId() + " - " + p.getDisplayName());
+                        left = true;
+                    } else {
+                        mParticipantPlayerPosition.put("right", p.getParticipantId());
+                    }
                 }
             }
         }
@@ -1284,6 +1340,18 @@ public class MainActivity extends Activity
         }
     }
 
+    private void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
+
+        turn = (byte) (++turn % mPCParticipants.size());
+        updateTurnGUI();
+
+        lastDropType = LDT;
+
+        updateParticipantUI(ID);
+        updatePrimaryDeckUI();
+
+    }
+
     // Broadcast my score to everybody else.
     void broadcastScore(boolean finalScore) {
         if (!mMultiplayer)
@@ -1364,6 +1432,8 @@ public class MainActivity extends Activity
             showInvPopup = (mCurScreen == R.id.screen_main || mCurScreen == R.id.screen_game);
         }
         findViewById(R.id.invitation_popup).setVisibility(showInvPopup ? View.VISIBLE : View.GONE);
+
+
     }
 
     void switchToMainScreen() {
@@ -1415,28 +1485,87 @@ public class MainActivity extends Activity
             (findViewById(R.id.dropped_5)).setClickable(false);
             (findViewById(R.id.deck_cards)).setClickable(false);
             //     (findViewById(R.id.my_drop)).setVisibility(View.GONE);
+            if (mMultiplayer) {
+                (findViewById(R.id.my_card_1)).setClickable(false);
+                (findViewById(R.id.my_card_2)).setClickable(false);
+                (findViewById(R.id.my_card_3)).setClickable(false);
+                (findViewById(R.id.my_card_4)).setClickable(false);
+                (findViewById(R.id.my_card_5)).setClickable(false);
+                (findViewById(R.id.dropped_1)).setClickable(false);
+                (findViewById(R.id.dropped_3)).setClickable(false);
+                (findViewById(R.id.dropped_2)).setClickable(false);
+                (findViewById(R.id.dropped_4)).setClickable(false);
+                (findViewById(R.id.dropped_5)).setClickable(false);
+                (findViewById(R.id.deck_cards)).setClickable(false);
+                //     (findViewById(R.id.my_drop)).setVisibility(View.GONE);
 
-            if (isTurn(mParticipantPlayerPosition.get("top"))) {
+                if (isTurn(mParticipantPlayerPosition.get("top"))) {
 
-                (findViewById(R.id.topPlayIcon)).setBackground(imgOnline);
-                (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
 
-            } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
-                (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.leftPlayIcon)).setBackground(imgOnline);
-                (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
 
+                } else {
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                }
             } else {
-                (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
-                (findViewById(R.id.rightPlayIcon)).setBackground(imgOnline);
-                (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                if (isTurn(mParticipantPlayerPosition.get("top"))) {
+                    Log.d(TAG, "updateTurnGUI() turn=top name=" + mParticipantPlayerPosition.get("top"));
+
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                    for (PCPlayer p : mPCParticipants) {
+                        Log.d(TAG, "updateTurnGUI() p.getParticipantId()=" + p.getParticipantId() + " ParticipantPlayerPosition.get(\"top\")" + mParticipantPlayerPosition.get("top"));
+
+                        if (p.getParticipantId().equals(mParticipantPlayerPosition.get("top"))) {
+                            Log.d(TAG, "updateTurnGUI()- Playing!");
+
+                            p.play();
+                        }
+                        break;
+                    }
+
+                } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
+                    Log.d(TAG, "updateTurnGUI() turn=left name=" + mParticipantPlayerPosition.get("left"));
+
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                    for (PCPlayer p : mPCParticipants) {
+                        if (p.getParticipantId().equals(mParticipantPlayerPosition.get("left"))) {
+                            p.play();
+                        }
+                        break;
+                    }
+                } else {
+                    Log.d(TAG, "updateTurnGUI() turn=right name=" + mParticipantPlayerPosition.get("right"));
+
+                    (findViewById(R.id.topPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
+                    (findViewById(R.id.rightPlayIcon)).setBackground(imgOnline);
+                    (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
+                    for (PCPlayer p : mPCParticipants) {
+                        if (p.getParticipantId().equals(mParticipantPlayerPosition.get("right"))) {
+                            p.play();
+                        }
+                        break;
+                    }
+                }
             }
         }
-
     }
 
     /*
@@ -1463,13 +1592,16 @@ public class MainActivity extends Activity
     }
 
     boolean updateTurnUi() {
-        Log.d(TAG, "updateTurnUi: mparti0: " + mParticipants.get(0).getParticipantId());
-        Log.d(TAG, "updateTurnUi: mpart1i: " + mParticipants.get(1).getParticipantId());
-        Log.d(TAG, "updateTurnUi: mpart0icards: " + mParticipantCards.get(mParticipants.get(0).getParticipantId()));
-        Log.d(TAG, "updateTurnUi: mpart1icards: " + mParticipantCards.get(mParticipants.get(1).getParticipantId()));
+        if (mMultiplayer) {
+            Log.d(TAG, "updateTurnUi: mparti0: " + mParticipants.get(0).getParticipantId());
+            Log.d(TAG, "updateTurnUi: mpart1i: " + mParticipants.get(1).getParticipantId());
+            Log.d(TAG, "updateTurnUi: mpart0icards: " + mParticipantCards.get(mParticipants.get(0).getParticipantId()));
+            Log.d(TAG, "updateTurnUi: mpart1icards: " + mParticipantCards.get(mParticipants.get(1).getParticipantId()));
 
-        Log.d(TAG, "updateTurnUi: myid: " + mMyId);
-        Log.d(TAG, "updateTurnUi: turn: " + turn);
+            Log.d(TAG, "updateTurnUi: myid: " + mMyId);
+            Log.d(TAG, "updateTurnUi: turn: " + turn);
+        }
+
         drawMyCards();
 
         return true;
@@ -1477,13 +1609,32 @@ public class MainActivity extends Activity
 
 
     boolean isTurn(String participant) {
-        if (!mParticipants.get(turn).getParticipantId().equals(participant)) {
-            Log.d(TAG, "myTurn=false");
-            return false;
-        }
+        if (mMultiplayer) {
+            if (!mParticipants.get(turn).getParticipantId().equals(participant)) {
+                Log.d(TAG, "myTurn=false");
+                return false;
+            }
 
-        Log.d(TAG, "myTurn=true");
-        return true;
+            Log.d(TAG, "myTurn=true");
+            return true;
+        } else {
+            Log.d(TAG, "isTurn() - participant=" + participant + " mMyId=" + mMyId + " mPCParticipants=" + mPCParticipants.toString() + " turn=" + turn);
+
+            if (participant.equals(mMyId)) {
+                Log.d(TAG, "myTurn=true");
+                if (turn == 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else if (!mPCParticipants.get(turn - 1).getParticipantId().equals(participant)) {
+                Log.d(TAG, "myTurn=false");
+                return false;
+            }
+
+            Log.d(TAG, "myTurn=true");
+            return true;
+        }
     }
 
 
@@ -1519,7 +1670,11 @@ public class MainActivity extends Activity
     void ownerInitial() {
 
         if (highscores == null)
-            highscores = new int[mParticipants.size()];
+            if (mMultiplayer) {
+                highscores = new int[mParticipants.size()];
+            } else {
+                highscores = new int[mPCParticipants.size()];
+            }
         this.cardDeck = new Cards();
         this.primaryDeck = new Stack<>();
         // Add the first card to primary deck.
@@ -1533,6 +1688,11 @@ public class MainActivity extends Activity
         // Division card to participants.
         createParticipantsCards();
         setPlayerPositonUI();
+        if (!mMultiplayer) {
+            drawMyCards();
+            updateParticipantsNamesAndUI();
+
+        }
     }
 
     public void drawMyCards() {
@@ -1586,6 +1746,8 @@ public class MainActivity extends Activity
             arr = cardsRightID;
         }
         ImageView myCard;
+        Log.d(TAG, "updateParticipantUI() - mParticipantCards.get(pid) - " + mParticipantCards.get(pid));
+
         for (i = 0; i < mParticipantCards.get(pid).size(); i++) {
             int drawable;
             if (yaniv) {
@@ -1644,33 +1806,65 @@ public class MainActivity extends Activity
         Log.d(TAG, "updateParticipantsNames() - mParticipantPlayerPosition - " + mParticipantPlayerPosition);
         Log.d(TAG, "updateParticipantsNames() - mParticipantPlayerPosition - " + mParticipantPlayerPosition.toString());
 
+        if (mMultiplayer) {
+            for (Participant p : mParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
+                    String pid = p.getParticipantId();
+                    String a = mParticipantPlayerPosition.get("top");
+                    Log.d(TAG, "updateParticipantsNames() - a - " + a);
+                    Log.d(TAG, "updateParticipantsNames() - pid - " + pid);
 
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
-                String pid = p.getParticipantId();
-                String a = mParticipantPlayerPosition.get("top");
-                Log.d(TAG, "updateParticipantsNames() - a - " + a);
-                Log.d(TAG, "updateParticipantsNames() - pid - " + pid);
-
-                if (mParticipantPlayerPosition.get("top").equals(p.getParticipantId())) {
-                    ((TextView) findViewById(R.id.topName)).setText(p.getDisplayName());
-                    (findViewById(R.id.topName)).setVisibility(View.VISIBLE);
-                    (findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
-                } else if (mParticipantPlayerPosition.get("left").equals(p.getParticipantId())) {
-                    ((TextView) findViewById(R.id.leftName)).setText(p.getDisplayName());
-                    (findViewById(R.id.leftName)).setVisibility(View.VISIBLE);
-                    (findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
-                } else {
-                    ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
-                    (findViewById(R.id.rightName)).setVisibility(View.VISIBLE);
-                    (findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
+                    if (mParticipantPlayerPosition.get("top").equals(p.getParticipantId())) {
+                        ((TextView) findViewById(R.id.topName)).setText(p.getDisplayName());
+                        (findViewById(R.id.topName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
+                    } else if (mParticipantPlayerPosition.get("left").equals(p.getParticipantId())) {
+                        ((TextView) findViewById(R.id.leftName)).setText(p.getDisplayName());
+                        (findViewById(R.id.leftName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
+                    } else {
+                        ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
+                        (findViewById(R.id.rightName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
+                    }
                 }
             }
-        }
-        //update all participant cards ui
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
-                updateParticipantUI(p.getParticipantId());
+
+            //update all participant cards ui
+            for (Participant p : mParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
+                    updateParticipantUI(p.getParticipantId());
+                }
+            }
+        } else {
+            for (PCPlayer p : mPCParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
+                    String pid = p.getParticipantId();
+                    String a = mParticipantPlayerPosition.get("top");
+                    Log.d(TAG, "updateParticipantsNames() - a - " + a);
+                    Log.d(TAG, "updateParticipantsNames() - pid - " + pid);
+
+                    if (mParticipantPlayerPosition.get("top").equals(p.getParticipantId())) {
+                        ((TextView) findViewById(R.id.topName)).setText(p.getDisplayName());
+                        (findViewById(R.id.topName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.topPlayIcon)).setVisibility(View.VISIBLE);
+                    } else if (mParticipantPlayerPosition.get("left").equals(p.getParticipantId())) {
+                        ((TextView) findViewById(R.id.leftName)).setText(p.getDisplayName());
+                        (findViewById(R.id.leftName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.leftPlayIcon)).setVisibility(View.VISIBLE);
+                    } else {
+                        ((TextView) findViewById(R.id.rightName)).setText(p.getDisplayName());
+                        (findViewById(R.id.rightName)).setVisibility(View.VISIBLE);
+                        (findViewById(R.id.rightPlayIcon)).setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            //update all participant cards ui
+            for (PCPlayer p : mPCParticipants) {
+                if (!p.getParticipantId().equals(mMyId)) {
+                    updateParticipantUI(p.getParticipantId());
+                }
             }
         }
     }
@@ -2216,17 +2410,25 @@ public class MainActivity extends Activity
 
     private String formatScoresToString() {
         String message = "";
+        if (mMultiplayer) {
+            for (int i = 0; i < mParticipants.size(); i++) {
+                Participant p = mParticipants.get(i);
+                String name = p.getDisplayName();
+                int sum = highscores[i];
+                message += name + ": " + sum + System.getProperty("line.separator");
+            }
 
-        for (int i = 0; i < mParticipants.size(); i++) {
-            Participant p = mParticipants.get(i);
-            String name = p.getDisplayName();
-            int sum = highscores[i];
-            message += name + ": " + sum + System.getProperty("line.separator");
+        } else {
+            for (int i = 0; i < mPCParticipants.size(); i++) {
+                PCPlayer p = mPCParticipants.get(i);
+                String name = p.getDisplayName();
+                int sum = highscores[i];
+                message += name + ": " + sum + System.getProperty("line.separator");
+            }
+
         }
-
         return message;
     }
-
 
     public void showHighscore(View view) {
 
@@ -2417,4 +2619,97 @@ public class MainActivity extends Activity
     }
 
 
+    // ######################### SinglePlayer - ONLY ###############################
+    private int numOfPC;
+
+    private void getNumOfPC() {
+        Log.d(TAG, "getNumOfPC()");
+
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle("Choose amount of players");
+        String[] types = {"1", "2", "3"};
+        b.setItems(types, new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                turn = 0;
+                myCards = new Vector<>();
+
+                dialog.dismiss();
+                switch (which) {
+                    case 0:
+                        numOfPC = 1;
+                        intialPCParticipantAray();
+
+                        ownerInitial();
+
+
+                        break;
+                    case 1:
+                        numOfPC = 2;
+                        intialPCParticipantAray();
+                        ownerInitial();
+
+                        break;
+                    case 2:
+                        numOfPC = 3;
+                        intialPCParticipantAray();
+                        ownerInitial();
+
+                        break;
+                }
+            }
+
+        });
+
+        b.show();
+    }
+
+    private void intialPCParticipantAray() {
+        Log.d(TAG, "intialPCParticipantAray()");
+
+        mPCParticipants = new ArrayList<>();
+        String names[] = getNames();
+        for (int i = 0; i < numOfPC; i++) {
+
+            mPCParticipants.add(new PCPlayer(names[i], "" + (i + 1), 0, yanivMinScore));
+            Log.d(TAG, "intialPCParticipantAray() -  i=" + i + "  -  cards=" + mPCParticipants.get(i).toString());
+
+        }
+    }
+
+    private String[] getNames() {
+        ArrayList<String> names = new ArrayList<>(Arrays.asList("David", "Rony", "Or", "Sapir", "Meni", "Yaron", "Elitzor", "Ron", "Tal", "Vered", "Yeuda", "Yael", "Matan"));
+        String[] ans = new String[numOfPC];
+        for (int i = 0; i < numOfPC; i++) {
+            int rand = (int) (Math.random() * names.size());
+            ans[i] = names.remove(rand);
+        }
+        return ans;
+    }
+
+    public static Stack<ArrayList<Card>> getPrimaryDeck() {
+        return primaryDeck;
+    }
+
+    public static void setPrimaryDeck(Stack<ArrayList<Card>> primaryDeck) {
+        MainActivity.primaryDeck = primaryDeck;
+    }
+
+    public static Cards getCardDeck() {
+        return cardDeck;
+    }
+
+    public void setCardDeck(Cards cardDeck) {
+        this.cardDeck = cardDeck;
+    }
+
+    public static Vector<Card> getMyCard(String myId) {
+        return mParticipantCards.get(myId);
+    }
+
+    public static void setMyCard(String myId, Vector<Card> v) {
+        mParticipantCards.put(myId, v);
+    }
 }
+

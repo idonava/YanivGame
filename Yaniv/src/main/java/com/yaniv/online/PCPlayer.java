@@ -5,10 +5,17 @@
  */
 package com.yaniv.online;
 
+import android.database.CharArrayBuffer;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Parcel;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
+import com.google.android.gms.games.Player;
+import com.google.android.gms.games.multiplayer.Participant;
+import com.google.android.gms.games.multiplayer.ParticipantResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +28,7 @@ import java.util.logging.Logger;
 /**
  * @author Ido
  */
-public class PCPlayer {
+public class PCPlayer implements Participant {
 
     int Difficulty = 0;
     private int biggestSum;
@@ -31,6 +38,16 @@ public class PCPlayer {
     private static Vector<Card> myCards;
     String name;
     String mMyID;
+    private int myTurn;
+    String TAG = "[Yaniv-PC:"+getDisplayName()+"]";
+    public static Vector<Card> getMyCards() {
+        return myCards;
+    }
+
+    public int getMyTurn() {
+        return myTurn;
+    }
+
     char hearts = '\u2764';
     char speades = '\u2660';
     char diamonds = '\u2666';
@@ -41,19 +58,25 @@ public class PCPlayer {
     private static Cards cardDeck;
     private boolean yanivDeclare = false;
     private boolean working;
+
     public boolean isYanivDeclare() {
         return yanivDeclare;
     }
 
-    public PCPlayer(String name, String mMyID, int yanivMinScore) {
+    public PCPlayer(String name, String mMyID, int myTurn, int yanivMinScore) {
         this.name = name;
         this.mMyID = mMyID;
         this.yanivMinScore = yanivMinScore;
-        calculateSum();
+        this.myTurn = myTurn;
         // this.Difficulty = Difficulty;
 
     }
+    public void setCards(Vector<Card> myCards){
+        this.myCards = myCards;
+        calculateSum();
 
+
+    }
     private void calculateSum() {
         mySum = 0;
         for (Card card : myCards) {
@@ -65,16 +88,24 @@ public class PCPlayer {
         return working;
     }
 
-    public void play(Stack<ArrayList<Card>> primaryDeck, Cards cardDeck, Vector<Card> myCards) {
-        working=true;
+    public void play() {
+        Log.d(TAG, "play()");
+
+        working = true;
         checkYanivOpportunity();
         if (!yanivDeclare) {
-            this.primaryDeck = primaryDeck;
-            this.cardDeck = cardDeck;
-            this.myCards = myCards;
+            this.primaryDeck = MainActivity.getPrimaryDeck();
+            this.cardDeck =  MainActivity.getCardDeck();
+            this.myCards = MainActivity.getMyCard(mMyID);
             cardDeckOnClick();
+            MainActivity.setMyCard(mMyID,myCards);
+            finishTurn();
         }
-        working=false;
+        working = false;
+    }
+
+    private void finishTurn() {
+      //  MainActivity.updatePlayersOnTurnFinishSingle(mMyID,lastDropType);
     }
 
     public int[] dropCards() {
@@ -88,21 +119,29 @@ public class PCPlayer {
         int[] equalVector = checkEquals();
         int[] orderVector = checkFlush();
 
-        //Checking if droping Sequence cards is the best option. 
+        //Checking if droping Sequence cards is the best option.
         if (orderSum > biggestSum && orderSum > equalSum) {
             this.lastDropType = 3;
             return orderVector;
-            //Checking if droping equals  cards is the best option. 
+            //Checking if droping equals  cards is the best option.
         } else if (equalSum > biggestSum && equalSum > orderSum) {
             this.lastDropType = 2;
             return equalVector;
-            //Else drop the biggest card. 
+            //Else drop the biggest card.
         } else {
             this.lastDropType = 1;
             System.out.println("## " + name + " Drop " + myCards.get(biggestIndex).toString());
             //    wait(500);
             return new int[]{biggestIndex};
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PCPlayer{" +
+                "name='" + name + '\'' +
+                ", mMyID='" + mMyID + '\'' +
+                '}';
     }
 
     public void checkYanivOpportunity() {
@@ -115,14 +154,14 @@ public class PCPlayer {
     }
 
     public void cardDeckOnClick() {
-        //  Log.d(TAG, "cardDeckOnClick");
+         Log.d(TAG, "cardDeckOnClick");
         final ArrayList<Card> myDrop = new ArrayList<Card>();
         int myCardsDrop[] = dropCards();
         for (int i = 0; i < myCardsDrop.length; i++) {
             int card = myCardsDrop[i];
 
             myDrop.add(myCards.get(card));
-          //  Log.d(TAG, "Dropping: " + myCardsDrop.get(i) + " sym: " + myDrop.get(i));
+            //  Log.d(TAG, "Dropping: " + myCardsDrop.get(i) + " sym: " + myDrop.get(i));
 
         }
         for (int i = 0; i < myDrop.size(); i++) {
@@ -132,7 +171,7 @@ public class PCPlayer {
         Card pop = cardDeck.jp.remove(0);
         myCards.add(pop);
         primaryDeck.add(myDrop);
-
+        MainActivity.setPrimaryDeck(primaryDeck);
 
     }
 
@@ -152,11 +191,11 @@ public class PCPlayer {
 
     public int[] checkEquals() {
         equalSum = -1;
-        Vector<Integer> Vec[] = (Vector<Integer>[]) new Vector[14];
-        for (int i = 0; i < 14; i++) {
+        Vector<Integer> Vec[] = (Vector<Integer>[]) new Vector[16];
+        for (int i = 0; i < 16; i++) {
             Vec[i] = new Vector<>();
         }
-        int sumArray[] = new int[14];
+        int sumArray[] = new int[16];
         boolean foundEqual = false;
         for (int i = 0; i < myCards.size(); i++) {
             Card c = myCards.get(i);
@@ -311,5 +350,89 @@ public class PCPlayer {
         } else {
             return null;
         }
+    }
+
+
+    @Override
+    public int getStatus() {
+        return 0;
+    }
+
+    @Override
+    public String zzwt() {
+        return null;
+    }
+
+    @Override
+    public int getCapabilities() {
+        return 0;
+    }
+
+    @Override
+    public boolean isConnectedToRoom() {
+        return false;
+    }
+
+    public String getDisplayName() {
+        return name;
+    }
+
+    @Override
+    public void getDisplayName(CharArrayBuffer charArrayBuffer) {
+
+    }
+
+    @Override
+    public Uri getIconImageUri() {
+        return null;
+    }
+
+    @Override
+    public String getIconImageUrl() {
+        return null;
+    }
+
+    @Override
+    public Uri getHiResImageUri() {
+        return null;
+    }
+
+    @Override
+    public String getHiResImageUrl() {
+        return null;
+    }
+
+    public String getParticipantId() {
+        return mMyID;
+    }
+
+    @Override
+    public Player getPlayer() {
+        return null;
+    }
+
+    @Override
+    public ParticipantResult getResult() {
+        return null;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+    }
+
+    @Override
+    public Participant freeze() {
+        return null;
+    }
+
+    @Override
+    public boolean isDataValid() {
+        return false;
     }
 }
