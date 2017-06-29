@@ -161,10 +161,13 @@
             android:layout_width="wrap_content"
             android:layout_height="17dp"
             android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:text="mydrop"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
@@ -173,21 +176,17 @@
 
         <LinearLayout
             android:id="@+id/myCardsLayout"
-            android:layout_width="0dp"
+            android:layout_width="300dp"
             android:layout_height="100dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="16dp"
             android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/turn"
-            app:layout_constraintVertical_bias="0.982">
+            app:layout_constraintRight_toRightOf="parent">
 
             <ImageView
                 android:id="@+id/my_card_1"
@@ -254,21 +253,6 @@
                 android:paddingTop="5dp" />/ android:src="@drawable/c_4_of_hearts" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/topName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="0dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            app:layout_constraintBottom_toBottomOf="@+id/turn"
-            app:layout_constraintLeft_toLeftOf="@+id/owner"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <LinearLayout
             android:id="@+id/player_top"
 
@@ -286,7 +270,9 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.025">
+            app:layout_constraintVertical_bias="0.0"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp">
 
             <ImageView
                 android:id="@+id/player_top_card_1"
@@ -295,7 +281,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard1OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -308,7 +293,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard2OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -321,7 +305,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard3OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -334,7 +317,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard4OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -347,7 +329,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard5OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -359,16 +340,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="-9dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/leftParentLayout"
-            app:layout_constraintHorizontal_bias="0.074"
-            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toRightOf="@+id/leftPlayIcon"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
+            app:layout_constraintVertical_bias="0.208" />
+
+        <TextView
+            android:id="@+id/topName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="3dp"
+            android:layout_weight="1"
+            android:visibility="visible"
+            app:layout_constraintHorizontal_bias="0.004"
+            app:layout_constraintLeft_toRightOf="@+id/topPlayIcon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/rightName"
@@ -376,84 +373,365 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right|center_vertical"
             android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="118dp"
             android:layout_weight="2"
+            android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/player_right"
-            app:layout_constraintHorizontal_bias="0.973"
+            app:layout_constraintHorizontal_bias="0.991"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/rightPlayIcon"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
-
-        <TextView
-            android:id="@+id/turn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:rotation="90"
-            tools:layout_editor_absoluteX="192dp"
-            tools:layout_editor_absoluteY="0dp" />
-
-        <TextView
-            android:id="@+id/owner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="0dp" />
-
-        <TextView
-            android:id="@+id/my_score"
-            style="@style/ScoreDisplay"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="17dp" />
 
         <Button
             android:id="@+id/yaniv_declare"
             style="@style/GameButton"
-            android:layout_width="80dp"
-            android:layout_height="40dp"
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginBottom="184dp"
+            android:background="@android:drawable/checkbox_off_background"
             android:onClick="declareYanivOnClick"
-            android:text="Yaniv !"
-            android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/my_drop"
+            android:text=" Yaniv! "
+            android:textColor="@color/PopupColor"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/turn"
-            app:layout_constraintVertical_bias="1.0" />
-
-        <TextView
-            android:id="@+id/countdown"
-            style="@style/FigureLabel"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            tools:layout_editor_absoluteX="16dp"
-            tools:layout_editor_absoluteY="16dp" />
+            app:layout_constraintRight_toRightOf="parent" />
 
         <ImageView
             android:id="@+id/deck_cards"
             android:layout_width="100dp"
             android:layout_height="80dp"
-            android:layout_centerInParent="true"
+            android:onClick="cardDeckOnClick"
+            android:src="@drawable/card_deck"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="140dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.091" />
+
+        <ImageView
+            android:id="@+id/player_right_card_1"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.415"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <ImageView
+            android:id="@+id/player_right_card_2"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            tools:layout_editor_absoluteX="282dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.490"
+            app:layout_constraintRight_toRightOf="parent" />
+
+        <ImageView
+            android:id="@+id/player_right_card_3"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.340"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+        <ImageView
+            android:id="@+id/player_right_card_4"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.265"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+        <ImageView
+            android:id="@+id/player_right_card_5"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            android:layout_marginRight="0dp"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.564" />
+
+        <ImageView
+            android:id="@+id/player_left_card_1"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            tools:layout_editor_absoluteX="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.415" />
+
+        <ImageView
+            android:id="@+id/player_left_card_2"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            tools:layout_editor_absoluteX="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintVertical_bias="0.49" />
+
+        <ImageView
+            android:id="@+id/player_left_card_3"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.34" />
+
+        <ImageView
+            android:id="@+id/player_left_card_4"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            tools:layout_editor_absoluteX="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.265" />
+
+        <ImageView
+            android:id="@+id/player_left_card_5"
+            android:layout_width="100dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_weight="1"
+            android:clickable="false"
+            android:paddingBottom="1dp"
+            android:paddingEnd="1dp"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:rotation="90"
+            tools:layout_editor_absoluteX="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintVertical_bias="0.565" />
+
+        <Button
+            android:id="@+id/button_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="127dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:onClick="cardDeckOnClick"
-            android:src="@drawable/pile_1"
+            android:elegantTextHeight="true"
+            android:gravity="center_horizontal|center"
+            android:text="Score:"
+            android:textSize="12sp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.521"
-            app:layout_constraintLeft_toRightOf="@+id/leftParentLayout"
-            app:layout_constraintRight_toLeftOf="@+id/player_right"
-            app:layout_constraintTop_toTopOf="@+id/turn"
-            app:layout_constraintVertical_bias="0.28"
-            app:layout_constraintVertical_chainStyle="packed" />
+            app:layout_constraintHorizontal_bias="0.089"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/my_drop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <Button
+            android:id="@+id/button_highscores"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="127dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:elegantTextHeight="true"
+            android:gravity="center_horizontal|center"
+            android:onClick="showHighscore"
+            android:text="Highscores"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.347"
+            app:layout_constraintLeft_toRightOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/my_drop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <Button
+            android:id="@+id/leftPlayIcon"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@android:drawable/presence_invisible"
+            android:clickable="false"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.016"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.203" />
+
+        <Button
+            android:id="@+id/myPlayIcon"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="false"
+            android:text="Your  Turn"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.757" />
+
+        <Button
+            android:id="@+id/rightPlayIcon"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:background="@android:drawable/presence_invisible"
+            android:clickable="false"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.212" />
+
+        <Button
+            android:id="@+id/topPlayIcon"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="2dp"
+            android:background="@android:drawable/presence_invisible"
+            android:clickable="false"
+            android:textSize="5sp"
+            android:visibility="gone"
+            app:layout_constraintHorizontal_bias="0.39"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <android.support.constraint.Guideline
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/guideline"
+            app:layout_constraintGuide_begin="20dp"
+            android:orientation="vertical"
+            tools:layout_editor_absoluteY="25dp"
+            tools:layout_editor_absoluteX="20dp" />
+
+        <TextView
+            android:id="@+id/countDownTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textSize="20sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/myCardsLayout"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/topPlayIcon"
+            app:layout_constraintVertical_bias="0.614" />
 
         <LinearLayout
             android:id="@+id/dropped_cards"
@@ -463,16 +741,17 @@
             android:layout_centerInParent="true"
 
             android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.666"
-            app:layout_constraintLeft_toRightOf="@+id/leftParentLayout"
-            app:layout_constraintRight_toLeftOf="@+id/player_right"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.498">
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/deck_cards"
+            app:layout_constraintVertical_bias="0.004">
 
             <ImageView
                 android:id="@+id/dropped_1"
@@ -515,272 +794,6 @@
                 android:onClick="dropedCard5OnClick" />/
             android:src="@drawable/c_12_of_diamonds" />
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/player_right"
-
-            android:layout_width="80dp"
-            android:layout_height="200dp"
-            android:layout_alignParentEnd="false"
-            android:layout_alignParentRight="false"
-            android:layout_centerVertical="false"
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="288dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="@+id/leftParentLayout"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.376">
-
-            <ImageView
-                android:id="@+id/player_right_card_1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:onClick="myCard1OnClick"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_right_card_2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:onClick="myCard2OnClick"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_right_card_3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:onClick="myCard3OnClick"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_right_card_4"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:onClick="myCard4OnClick"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_right_card_5"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:onClick="myCard5OnClick"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/leftParentLayout"
-            android:layout_width="80dp"
-            android:layout_height="200dp"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.026"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.381">
-
-            <ImageView
-                android:id="@+id/player_left_card_3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_left_card_5"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_left_card_1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_left_card_2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-            <ImageView
-                android:id="@+id/player_left_card_4"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical|center_horizontal"
-                android:layout_weight="1"
-                android:clickable="false"
-                android:paddingBottom="1dp"
-                android:paddingEnd="1dp"
-                android:paddingLeft="1dp"
-                android:paddingRight="1dp"
-                android:rotation="90" />
-
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/button_score"
-            android:layout_width="107dp"
-            android:layout_height="33dp"
-            android:layout_marginBottom="127dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:elegantTextHeight="true"
-            android:gravity="center_horizontal|center"
-            android:text="Score:"
-            android:textSize="12sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/my_drop"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            tools:layout_editor_absoluteY="407dp" />
-
-        <Button
-            android:id="@+id/button_highscores"
-            android:layout_width="107dp"
-            android:layout_height="33dp"
-            android:layout_marginBottom="127dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginTop="8dp"
-            android:elegantTextHeight="true"
-            android:gravity="center_horizontal|center"
-            android:text="Highscores"
-            android:textSize="12sp"
-            android:onClick="showHighscore"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.387"
-            app:layout_constraintLeft_toRightOf="parent"
-            app:layout_constraintRight_toLeftOf="@+id/my_drop"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0" />
-
-        <Button
-            android:id="@+id/leftPlayIcon"
-            android:layout_width="84dp"
-            android:layout_height="46dp"
-            android:layout_marginTop="220dp"
-            android:text="Playing"
-            android:visibility="gone"
-            app:layout_constraintHorizontal_bias="0.026"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/myPlayIcon"
-            android:layout_width="114dp"
-            android:layout_height="50dp"
-            android:text="Your Turn"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.696" />
-
-        <Button
-            android:id="@+id/rightPlayIcon"
-            android:layout_width="84dp"
-            android:layout_height="46dp"
-            android:layout_marginTop="220dp"
-            android:text="Playing"
-            android:visibility="gone"
-            app:layout_constraintHorizontal_bias="0.973"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-            android:id="@+id/topPlayIcon"
-            android:layout_width="84dp"
-            android:layout_height="46dp"
-            android:layout_marginTop="43dp"
-            android:text="Playing"
-            android:visibility="gone"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/turn" />
-
-        <android.support.constraint.Guideline
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/guideline"
-            app:layout_constraintGuide_begin="20dp"
-            android:orientation="vertical" />
-
 
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>
