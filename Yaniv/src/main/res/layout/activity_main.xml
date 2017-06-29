@@ -253,22 +253,6 @@
                 android:paddingTop="5dp" />/ android:src="@drawable/c_4_of_hearts" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/topName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginEnd="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="-1dp"
-            android:layout_weight="1"
-            app:layout_constraintHorizontal_bias="0.048"
-            app:layout_constraintLeft_toRightOf="@+id/topPlayIcon"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <LinearLayout
             android:id="@+id/player_top"
 
@@ -297,7 +281,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard1OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -310,7 +293,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard2OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -323,7 +305,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard3OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -336,7 +317,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard4OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -349,7 +329,6 @@
                 android:layout_gravity="center_vertical|center_horizontal"
                 android:layout_weight="1"
                 android:clickable="false"
-                android:onClick="myCard5OnClick"
                 android:paddingBottom="1dp"
                 android:paddingLeft="1dp"
                 android:paddingRight="1dp"
@@ -361,13 +340,32 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toRightOf="@+id/leftPlayIcon"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.21"
-            app:layout_constraintLeft_toRightOf="@+id/leftPlayIcon"
+            app:layout_constraintVertical_bias="0.208" />
+
+        <TextView
+            android:id="@+id/topName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
-            app:layout_constraintHorizontal_bias="0.022" />
+            android:layout_marginRight="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="3dp"
+            android:layout_weight="1"
+            android:visibility="visible"
+            app:layout_constraintHorizontal_bias="0.004"
+            app:layout_constraintLeft_toRightOf="@+id/topPlayIcon"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/rightName"
@@ -377,22 +375,22 @@
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="115dp"
-            android:layout_weight="2"
-            android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/player_right"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="1.0"
-            app:layout_constraintRight_toLeftOf="@+id/rightPlayIcon"
             android:layout_marginRight="8dp"
-            app:layout_constraintHorizontal_bias="0.885" />
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="118dp"
+            android:layout_weight="2"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/player_right"
+            app:layout_constraintHorizontal_bias="0.991"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/rightPlayIcon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/yaniv_declare"
             style="@style/GameButton"
-            android:layout_marginBottom="151dp"
+            android:layout_marginBottom="184dp"
             android:background="@android:drawable/checkbox_off_background"
             android:onClick="declareYanivOnClick"
             android:text=" Yaniv! "
@@ -506,13 +504,13 @@
             android:paddingLeft="1dp"
             android:paddingRight="1dp"
             android:rotation="90"
-            android:layout_marginRight="2dp"
+            android:layout_marginRight="0dp"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="8dp"
-            app:layout_constraintVertical_bias="0.565" />
+            app:layout_constraintVertical_bias="0.564" />
 
         <ImageView
             android:id="@+id/player_left_card_1"
@@ -659,7 +657,7 @@
             android:layout_height="20dp"
             android:layout_marginBottom="8dp"
             android:layout_marginTop="8dp"
-            android:background="@android:drawable/presence_online"
+            android:background="@android:drawable/presence_invisible"
             android:clickable="false"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -678,18 +676,17 @@
             android:text="Your  Turn"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.467"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.755" />
+            app:layout_constraintVertical_bias="0.757" />
 
         <Button
             android:id="@+id/rightPlayIcon"
             style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:background="@android:drawable/presence_online"
+            android:background="@android:drawable/presence_invisible"
             android:clickable="false"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -705,7 +702,7 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginTop="2dp"
-            android:background="@android:drawable/presence_online"
+            android:background="@android:drawable/presence_invisible"
             android:clickable="false"
             android:textSize="5sp"
             android:visibility="gone"
@@ -797,7 +794,6 @@
                 android:onClick="dropedCard5OnClick" />/
             android:src="@drawable/c_12_of_diamonds" />
         </LinearLayout>
-
 
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>
