@@ -17,6 +17,7 @@ package com.yaniv.online;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -120,7 +121,7 @@ public class MainActivity extends Activity
     static ArrayList<PCPlayer> mPCParticipants = null;
 
     // My participant ID in the currently active game
-    String mMyId = null;
+    static String mMyId = null;
 
     // If non-null, this is the id of the invitation we received via the
     // invitation listener
@@ -194,16 +195,21 @@ public class MainActivity extends Activity
     //Participant objects
     private Vector<Card> myCards;
     private int mySum;
-    private int lastDropType = 1;
+    private static int lastDropType = 1;
     private int myLastDropType;
     private int[] invalidDrop = {999};
     EditText takeCardEditText;
     Map<String, Integer> cardsDrawable = new HashMap<>();
 
+    public static Context baseContext;
+    static MainActivity instance;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        instance = this;
         setContentView(R.layout.activity_main);
+        baseContext = getBaseContext();
 
         updateLayoutParams();
 
@@ -219,6 +225,7 @@ public class MainActivity extends Activity
             findViewById(id).setOnClickListener(this);
         }
         initialCardsDrawable();
+
     }
 
     private void updateLayoutParams() {
@@ -262,7 +269,7 @@ public class MainActivity extends Activity
                 Log.d(TAG, "Sign-in button clicked");
                 mSignInClicked = true;
                 mGoogleApiClient.connect();
-                 mMultiplayer=true;
+                mMultiplayer = true;
                 break;
             case R.id.button_sign_out:
                 // user wants to sign out
@@ -272,7 +279,7 @@ public class MainActivity extends Activity
                 Games.signOut(mGoogleApiClient);
                 mGoogleApiClient.disconnect();
                 switchToScreen(R.id.screen_sign_in);
-                mMultiplayer=true;
+                mMultiplayer = true;
 
                 break;
             case R.id.button_invite_players:
@@ -280,7 +287,7 @@ public class MainActivity extends Activity
                 intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(mGoogleApiClient, 1, 3);
                 switchToScreen(R.id.screen_wait);
                 startActivityForResult(intent, RC_SELECT_PLAYERS);
-                mMultiplayer=true;
+                mMultiplayer = true;
 
                 break;
             case R.id.button_see_invitations:
@@ -288,7 +295,7 @@ public class MainActivity extends Activity
                 intent = Games.Invitations.getInvitationInboxIntent(mGoogleApiClient);
                 switchToScreen(R.id.screen_wait);
                 startActivityForResult(intent, RC_INVITATION_INBOX);
-                mMultiplayer=true;
+                mMultiplayer = true;
 
                 break;
             case R.id.button_accept_popup_invitation:
@@ -296,13 +303,13 @@ public class MainActivity extends Activity
                 // (the one we got through the OnInvitationReceivedListener).
                 acceptInviteToRoom(mIncomingInvitationId);
                 mIncomingInvitationId = null;
-                mMultiplayer=true;
+                mMultiplayer = true;
 
                 break;
             case R.id.button_quick_game:
                 // user wants to play against a random opponent right now
                 startQuickGame();
-                mMultiplayer=true;
+                mMultiplayer = true;
 
                 break;
 
@@ -679,6 +686,7 @@ public class MainActivity extends Activity
         mStatusCode = statusCode;
         mRoom = room;
         turn = 0;
+
         myCards = new Vector<>();
         initialAllVal();
         if (getOwnerId().equals(mMyId)) {
@@ -933,6 +941,7 @@ public class MainActivity extends Activity
 
     // Start the gameplay phase of the game.
     void startGame(boolean multiplayer) {
+        cleanUI();
         mMultiplayer = multiplayer;
         drawMyCards();
         switchToScreen(R.id.screen_game);
@@ -953,6 +962,43 @@ public class MainActivity extends Activity
                 h.postDelayed(this, 1000);
             }
         }, 1000);
+    }
+
+    private void cleanUI() {
+
+        //update old participant ui;
+
+
+        ImageView myCard;
+
+        ((TextView) findViewById(R.id.leftName)).setText("");
+        (findViewById(R.id.leftName)).setVisibility(View.GONE);
+        (findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
+        ((TextView) findViewById(R.id.rightName)).setText("");
+        (findViewById(R.id.rightName)).setVisibility(View.GONE);
+        (findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
+        ((TextView) findViewById(R.id.topName)).setText("");
+        (findViewById(R.id.topName)).setVisibility(View.GONE);
+        (findViewById(R.id.topPlayIcon)).setVisibility(View.GONE);
+        for (int j = 0; j < 5; j++) {
+            myCard = (ImageView) findViewById(cardsRightID[j]);
+            myCard.setVisibility(View.GONE);
+
+            myCard = (ImageView) findViewById(cardsLeftID[j]);
+            myCard.setVisibility(View.GONE);
+
+            myCard = (ImageView) findViewById(cardsTopID[j]);
+            myCard.setVisibility(View.GONE);
+
+            myCard = (ImageView) findViewById(cardsID[j]);
+            myCard.setVisibility(View.GONE);
+
+            myCard = (ImageView) findViewById(droppedID[j]);
+            myCard.setVisibility(View.GONE);
+
+        }
+
+
     }
 
     // Game tick -- update countdown, check if game ended.
@@ -1340,7 +1386,7 @@ public class MainActivity extends Activity
         }
     }
 
-    private void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
+    public void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
 
         turn = (byte) (++turn % mPCParticipants.size());
         updateTurnGUI();
@@ -1444,13 +1490,13 @@ public class MainActivity extends Activity
         }
     }
 
-
     // updates the screen - who's turn is it
     void updateTurnGUI() {
         Log.d(TAG, "updateTurnGUI() ");
 
-        Drawable imgOnline = ContextCompat.getDrawable(this, android.R.drawable.presence_online);
-        Drawable imgInvisible = ContextCompat.getDrawable(this, android.R.drawable.presence_invisible);
+        Drawable imgOnline = ContextCompat.getDrawable(baseContext, android.R.drawable.presence_online);
+
+        Drawable imgInvisible = ContextCompat.getDrawable(baseContext, android.R.drawable.presence_invisible);
 
         if (isTurn(mMyId)) {
             (findViewById(R.id.my_card_1)).setClickable(true);
@@ -1668,6 +1714,7 @@ public class MainActivity extends Activity
     //Owner Functions
     //First Initial
     void ownerInitial() {
+        Log.d(TAG, "ownerInitial()");
 
         if (highscores == null)
             if (mMultiplayer) {
@@ -1859,13 +1906,14 @@ public class MainActivity extends Activity
                     }
                 }
             }
-
             //update all participant cards ui
             for (PCPlayer p : mPCParticipants) {
                 if (!p.getParticipantId().equals(mMyId)) {
                     updateParticipantUI(p.getParticipantId());
                 }
             }
+
+
         }
     }
 
@@ -2634,30 +2682,26 @@ public class MainActivity extends Activity
             public void onClick(DialogInterface dialog, int which) {
                 turn = 0;
                 myCards = new Vector<>();
+                highscores = null;
+                initialAllVal();
 
                 dialog.dismiss();
                 switch (which) {
                     case 0:
                         numOfPC = 1;
-                        intialPCParticipantAray();
-
-                        ownerInitial();
-
 
                         break;
                     case 1:
                         numOfPC = 2;
-                        intialPCParticipantAray();
-                        ownerInitial();
-
                         break;
                     case 2:
                         numOfPC = 3;
-                        intialPCParticipantAray();
-                        ownerInitial();
 
                         break;
                 }
+                intialPCParticipantAray();
+                ownerInitial();
+                updatePrimaryDeckUI();
             }
 
         });

@@ -105,7 +105,7 @@ public class PCPlayer implements Participant {
     }
 
     private void finishTurn() {
-      //  MainActivity.updatePlayersOnTurnFinishSingle(mMyID,lastDropType);
+       MainActivity.instance.updatePlayersOnTurnFinishSingle(mMyID,lastDropType);
     }
 
     public int[] dropCards() {
