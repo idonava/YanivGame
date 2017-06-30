@@ -92,6 +92,7 @@ public class MainActivity extends Activity
     final static int RC_SELECT_PLAYERS = 10000;
     final static int RC_INVITATION_INBOX = 10001;
     final static int RC_WAITING_ROOM = 10002;
+    long timeToPCSleep = 2000;
 
     // Request code used to invoke sign in user interactions.
     private static final int RC_SIGN_IN = 9001;
@@ -941,11 +942,12 @@ public class MainActivity extends Activity
 
     // Start the gameplay phase of the game.
     void startGame(boolean multiplayer) {
-        cleanUI();
+
         mMultiplayer = multiplayer;
         drawMyCards();
         switchToScreen(R.id.screen_game);
         if (!mMultiplayer) {
+            cleanUI();
             Log.d(TAG, "singlePlayer()");
             mMyId = "ID";
             getNumOfPC();
@@ -1033,8 +1035,11 @@ public class MainActivity extends Activity
         if (mMultiplayer) {
             updatePlayersOnTurnFinish(pickedCardIndex, myDrop);
         } else {
+            Log.d(TAG, "onTurnFinished() - turn1: " + turn);
 
             turn = (byte) (++turn % (mPCParticipants.size() + 1));
+            Log.d(TAG, "onTurnFinished() - turn2: " + turn);
+
             updateTurnGUI();
         }
 
@@ -1046,6 +1051,55 @@ public class MainActivity extends Activity
         ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
     }
 
+    public void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
+        Log.d(TAG, "updatePlayersOnTurnFinishSingle() - turn2= " + turn);
+
+        turn = (byte) (++turn % (mPCParticipants.size() + 1));
+        Log.d(TAG, "updatePlayersOnTurnFinishSingle() - turn2= " + turn);
+
+        lastDropType = LDT;
+
+        updateParticipantUI(ID);
+        updatePrimaryDeckUI();
+        updateTurnGUI();
+
+
+    }
+
+    // indicates the player scored one point
+    void onTurnFinishedSingle(byte pickedCardIndex, ArrayList<Card> myDrop) {
+        if (!updateTurnUi()) {
+            return;
+        }
+
+
+//        if (mSecondsLeft <= 0)
+//            return; // too late!
+//        ++mScore;
+
+        calculateSum();
+        drawMyCards();
+        updatePrimaryDeckUI();
+
+        // broadcast our new score to our peers
+        if (mMultiplayer) {
+            updatePlayersOnTurnFinish(pickedCardIndex, myDrop);
+        } else {
+            Log.d(TAG, "onTurnFinished() - turn1: " + turn);
+
+            turn = (byte) (++turn % (mPCParticipants.size() + 1));
+            Log.d(TAG, "onTurnFinished() - turn2: " + turn);
+
+            updateTurnGUI();
+        }
+
+//        broadcastScore(true);
+//        sendCardDeckToAllParticipants();
+//        sendMyCardsToAllParticipants();
+//        sendPrimaryDeckToAllParticipants();
+        ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
+        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
+    }
     /*
      * COMMUNICATIONS SECTION. Methods that implement the game's network
      * protocol.
@@ -1386,17 +1440,6 @@ public class MainActivity extends Activity
         }
     }
 
-    public void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
-
-        turn = (byte) (++turn % mPCParticipants.size());
-        updateTurnGUI();
-
-        lastDropType = LDT;
-
-        updateParticipantUI(ID);
-        updatePrimaryDeckUI();
-
-    }
 
     // Broadcast my score to everybody else.
     void broadcastScore(boolean finalScore) {
@@ -1490,6 +1533,15 @@ public class MainActivity extends Activity
         }
     }
 
+    /*
+    Needs to thread sleep with that:
+        Handler handler = new Handler();
+        Runnable r = new Runnable() {
+            public void run() {
+                p.play();
+            }
+        };
+                                handler.postDelayed(r, timeToPCSleep);*/
     // updates the screen - who's turn is it
     void updateTurnGUI() {
         Log.d(TAG, "updateTurnGUI() ");
@@ -1572,15 +1624,15 @@ public class MainActivity extends Activity
                     (findViewById(R.id.leftPlayIcon)).setBackground(imgInvisible);
                     (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
                     (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
-                    for (PCPlayer p : mPCParticipants) {
+                    for (final PCPlayer p : mPCParticipants) {
                         Log.d(TAG, "updateTurnGUI() p.getParticipantId()=" + p.getParticipantId() + " ParticipantPlayerPosition.get(\"top\")" + mParticipantPlayerPosition.get("top"));
 
                         if (p.getParticipantId().equals(mParticipantPlayerPosition.get("top"))) {
                             Log.d(TAG, "updateTurnGUI()- Playing!");
-
                             p.play();
+                            break;
                         }
-                        break;
+
                     }
 
                 } else if (isTurn(mParticipantPlayerPosition.get("left"))) {
@@ -1590,11 +1642,11 @@ public class MainActivity extends Activity
                     (findViewById(R.id.leftPlayIcon)).setBackground(imgOnline);
                     (findViewById(R.id.rightPlayIcon)).setBackground(imgInvisible);
                     (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
-                    for (PCPlayer p : mPCParticipants) {
+                    for (final PCPlayer p : mPCParticipants) {
                         if (p.getParticipantId().equals(mParticipantPlayerPosition.get("left"))) {
                             p.play();
+                            break;
                         }
-                        break;
                     }
                 } else {
                     Log.d(TAG, "updateTurnGUI() turn=right name=" + mParticipantPlayerPosition.get("right"));
@@ -1605,13 +1657,17 @@ public class MainActivity extends Activity
                     (findViewById(R.id.myPlayIcon)).setVisibility(View.GONE);
                     for (PCPlayer p : mPCParticipants) {
                         if (p.getParticipantId().equals(mParticipantPlayerPosition.get("right"))) {
+
                             p.play();
                         }
+
                         break;
                     }
                 }
             }
+
         }
+
     }
 
     /*
@@ -2216,10 +2272,15 @@ public class MainActivity extends Activity
     }
 
     public void checkYanivOpportunity() {
+
         calculateSum();
         if (mySum <= yanivMinScore) {
+            Log.d(TAG, "checkYanivOpportunity: True");
+
             ((findViewById(R.id.yaniv_declare))).setVisibility(View.VISIBLE);
         } else {
+            Log.d(TAG, "checkYanivOpportunity: False");
+
             ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
         }
     }

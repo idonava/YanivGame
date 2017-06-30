@@ -390,7 +390,8 @@
         <Button
             android:id="@+id/yaniv_declare"
             style="@style/GameButton"
-            android:layout_marginBottom="184dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
             android:background="@android:drawable/checkbox_off_background"
             android:onClick="declareYanivOnClick"
             android:text=" Yaniv! "
@@ -398,7 +399,9 @@
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent" />
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.667" />
 
         <ImageView
             android:id="@+id/deck_cards"
