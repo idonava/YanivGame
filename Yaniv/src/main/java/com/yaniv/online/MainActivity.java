@@ -21,11 +21,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -136,6 +134,7 @@ public class MainActivity extends Activity
 
     private int myCardWidthParam;
     private int topCardWidthParam;
+    private boolean readyToStartGame;
     private int[] highscores;
     int mStatusCode;
     Room mRoom;
@@ -180,6 +179,9 @@ public class MainActivity extends Activity
     private static final Type DATA_TYPE_CARDS =
             new TypeToken<ArrayList<Card>>() {
             }.getType();
+    private static final Type DATA_TYPE_STRING =
+            new TypeToken<String>() {
+            }.getType();
 
     //Participants common objects
     private static Stack<ArrayList<Card>> primaryDeck;
@@ -189,6 +191,8 @@ public class MainActivity extends Activity
     // from the network.
     static Map<String, Vector<Card>> mParticipantCards = new HashMap<>();
     Map<String, String> mParticipantPlayerPosition = new HashMap<>();
+    Map<String, Boolean> readyToPlayPlayers = new HashMap<>();
+
 
     // Participants who sent us their final score.
     Set<String> mFinishedParticipants = new HashSet<>();
@@ -686,7 +690,12 @@ public class MainActivity extends Activity
 
         mStatusCode = statusCode;
         mRoom = room;
+        readyToStartGame = false;
         turn = 0;
+
+        for (Participant p : mParticipants){
+            readyToPlayPlayers.put(p.getParticipantId(), false);
+        }
 
         myCards = new Vector<>();
         initialAllVal();
@@ -1198,6 +1207,11 @@ public class MainActivity extends Activity
             yanivCalled(buf);
         }
 
+        else if ((int) buf[0] == 8){
+            readyToPlayPlayers.put(sender, true);
+            checkReadyList();
+        }
+
         // Regular messages to change the turn.
         else {
 
@@ -1210,6 +1224,18 @@ public class MainActivity extends Activity
                 lastDropType = (int) buf[4];
             }
         }
+    }
+
+    private void checkReadyList(){
+        boolean isAllReady = true;
+        Log.d(TAG, "[checkReadyList]" + readyToPlayPlayers.toString());
+        for(Participant p : mParticipants){
+            if (!readyToPlayPlayers.get(p.getParticipantId())){
+                isAllReady = false;
+                break;
+            }
+        }
+        readyToStartGame = isAllReady;
     }
 
     // After a player called Yaniv, and the msg was received
@@ -1293,17 +1319,22 @@ public class MainActivity extends Activity
                 .show();
 
         final TextView timer = (TextView) (findViewById(R.id.countDownTimer));
+        final Button readyButton = (Button) (findViewById(R.id.Ready));
         if (isGameFinished) {
             timer.setText("The game is finished.");
             timer.setVisibility(View.VISIBLE);
         } else {
-            timer.setText("New game starts in: 10 seconds");
+            timer.setText("New game starts in: 30 seconds");
             timer.setVisibility(View.VISIBLE);
+            readyButton.setVisibility(View.VISIBLE);
 
             new CountDownTimer(30000, 1000) {
 
                 public void onTick(long millisUntilFinished) {
-                    timer.setText("New game starts in: " + millisUntilFinished / 1000 + " seconds");
+                    timer.setText("New game starts in: " + millisUntilFinished / 1000 + " seconds" + System.getProperty("line.separator") + "or when everyone is ready.");
+                    if (readyToStartGame){
+                        onFinish();
+                    }
                 }
 
                 public void onFinish() {
@@ -2552,6 +2583,21 @@ public class MainActivity extends Activity
                 .setTitle("Highscores")
                 .setMessage(formatScoresToString())
                 .show();
+
+    }
+
+    public void readyToPlay(View view) {
+        Log.d(TAG, "Ready() ");
+
+        Button readyButton = (Button) (findViewById(R.id.Ready));
+        readyButton.setVisibility(View.GONE);
+
+        readyToPlayPlayers.put(mMyId, true);
+        byte[] sendMsg = new byte[1];
+        sendMsg[0] = 8;
+
+        messageToAllParticipants(sendMsg, true);
+        checkReadyList();
 
     }
 
