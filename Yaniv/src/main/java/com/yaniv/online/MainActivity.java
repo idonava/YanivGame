@@ -1551,10 +1551,15 @@ public class MainActivity extends Activity
         Drawable imgInvisible = ContextCompat.getDrawable(baseContext, android.R.drawable.presence_invisible);
 
         if (isTurn(mMyId)) {
+            (findViewById(R.id.my_card_1)).setSelected(false);
             (findViewById(R.id.my_card_1)).setClickable(true);
+            (findViewById(R.id.my_card_2)).setSelected(false);
             (findViewById(R.id.my_card_2)).setClickable(true);
+            (findViewById(R.id.my_card_3)).setSelected(false);
             (findViewById(R.id.my_card_3)).setClickable(true);
+            (findViewById(R.id.my_card_4)).setSelected(false);
             (findViewById(R.id.my_card_4)).setClickable(true);
+            (findViewById(R.id.my_card_5)).setSelected(false);
             (findViewById(R.id.my_card_5)).setClickable(true);
             (findViewById(R.id.dropped_1)).setClickable(true);
             (findViewById(R.id.dropped_3)).setClickable(true);
@@ -2397,7 +2402,8 @@ public class MainActivity extends Activity
 
     public void myCard1OnClick(View view) {
 
-        Log.d(TAG, "myCard1OnClick");
+
+        Log.d(TAG, "myCard1OnClick. viewSelected? " + view.isSelected());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
         String card = myCards.get(0).toString();
 
@@ -2418,7 +2424,7 @@ public class MainActivity extends Activity
 
     public void myCard2OnClick(View view) {
 
-        Log.d(TAG, "myCard2OnClick=" + primaryDeck.toString());
+        Log.d(TAG, "myCard2OnClick. viewSelected? " + view.isSelected());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
         String card = myCards.get(1).toString();
 
@@ -2441,7 +2447,7 @@ public class MainActivity extends Activity
 
     public void myCard3OnClick(View view) {
 
-        Log.d(TAG, "myCard3OnClick=" + primaryDeck.toString());
+        Log.d(TAG, "myCard3OnClick. viewSelected? " + view.isSelected());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
         String card = myCards.get(2).toString();
 
@@ -2464,7 +2470,7 @@ public class MainActivity extends Activity
 
     public void myCard4OnClick(View view) {
 
-        Log.d(TAG, "myCard4OnClick=" + primaryDeck.toString());
+        Log.d(TAG, "myCard4OnClick. viewSelected? " + view.isSelected());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
         String card = myCards.get(3).toString();
 
@@ -2487,7 +2493,7 @@ public class MainActivity extends Activity
 
     public void myCard5OnClick(View view) {
 
-        Log.d(TAG, "myCard5OnClick=" + primaryDeck.toString());
+        Log.d(TAG, "myCard5OnClick. viewSelected? " + view.isSelected());
         Drawable highlight = getResources().getDrawable(R.drawable.highlight);
         String card = myCards.get(4).toString();
 
