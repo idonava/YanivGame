@@ -342,7 +342,13 @@
             android:layout_gravity="center_vertical|center_horizontal"
             android:layout_marginLeft="8dp"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_green_light"
+            android:textStyle="bold|italic"
             android:visibility="gone"
+            android:shadowColor="@color/text_shadow"
+            android:shadowDx="-2"
+            android:shadowDy="-2"
+            android:shadowRadius="2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintLeft_toRightOf="@+id/leftPlayIcon"
@@ -361,6 +367,12 @@
             android:layout_marginStart="8dp"
             android:layout_marginTop="3dp"
             android:layout_weight="1"
+            android:shadowColor="@color/text_shadow"
+            android:shadowDx="-2"
+            android:shadowDy="-2"
+            android:shadowRadius="2"
+            android:textColor="@android:color/holo_green_light"
+            android:textStyle="bold|italic"
             android:visibility="visible"
             app:layout_constraintHorizontal_bias="0.004"
             app:layout_constraintLeft_toRightOf="@+id/topPlayIcon"
@@ -375,13 +387,18 @@
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginRight="4dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="118dp"
             android:layout_weight="2"
+            android:shadowColor="@color/text_shadow"
+            android:shadowDx="-2"
+            android:shadowDy="-2"
+            android:shadowRadius="2"
+            android:textColor="@android:color/holo_green_light"
+            android:textStyle="bold|italic"
             android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/player_right"
-            app:layout_constraintHorizontal_bias="0.991"
+            app:layout_constraintHorizontal_bias="0.983"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/rightPlayIcon"
             app:layout_constraintTop_toTopOf="parent"
@@ -689,6 +706,8 @@
             style="@style/Widget.AppCompat.Button.Colored"
             android:layout_width="20dp"
             android:layout_height="20dp"
+            android:layout_marginBottom="2dp"
+            android:layout_marginRight="4dp"
             android:background="@android:drawable/presence_invisible"
             android:clickable="false"
             android:visibility="gone"
@@ -697,7 +716,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.212" />
+            app:layout_constraintVertical_bias="0.215" />
 
         <Button
             android:id="@+id/topPlayIcon"
@@ -728,7 +747,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView"
+            android:textAlignment="center"
+            android:textColor="?android:attr/colorMultiSelectHighlight"
             android:textSize="20sp"
+            android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/myCardsLayout"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -797,6 +819,21 @@
                 android:onClick="dropedCard5OnClick" />/
             android:src="@drawable/c_12_of_diamonds" />
         </LinearLayout>
+
+        <Button
+            android:id="@+id/Ready"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:onClick="readyToPlay"
+            android:text="Ready"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.735" />
 
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>
