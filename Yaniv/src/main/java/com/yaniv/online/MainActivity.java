@@ -722,8 +722,9 @@ public class MainActivity extends Activity
             drawMyCards();
 
             //Sending the card deck to all participant
-            sendCardDeckToAllParticipants();
+            sendCardDeckToAllParticipants(false);
             sendPrimaryDeckToAllParticipants();
+
             //update all participant cards ui
             updateParticipantsNamesAndUI();
 
@@ -788,7 +789,7 @@ public class MainActivity extends Activity
 
     }
 
-    private void sendCardDeckToAllParticipants() {
+    private void sendCardDeckToAllParticipants(boolean shuffle) {
         Log.d(TAG, "sendCardDeckToAllParticipants() ");
 
         byte[] b = new byte[0];
@@ -800,6 +801,10 @@ public class MainActivity extends Activity
         }
         byte[] sendMsg = new byte[5 + b.length];
         sendMsg[0] = (int) 0;
+        if (shuffle){
+            sendMsg[1] = (int) 1;
+            displayToastForLimitTime("Shuffling Card Deck...",3000);
+        }
         for (int i = 0; i < b.length; i++) {
             sendMsg[5 + i] = b[i];
         }
@@ -1155,8 +1160,12 @@ public class MainActivity extends Activity
             updatePrimaryDeckUI();
 
         }
-        //Game is started, owner send the cardsDeck, any participant needs to reload the cards into cardDeck
+        //Game is started, owner send the cardsDeck, any participant needs to reload the cards into cardDeck or shuffle cards.
         else if ((int) buf[0] == 0) {
+            // Checking shuffle
+            if ((int) buf[1]==1){
+                displayToastForLimitTime("Shuffling Card Deck...",3000);
+            }
             cardDeck = fromGson(buf, 5, buf.length, DATA_TYPE_CARD_DECK);
             Log.d(TAG, "[onRealTimeMessageReceived] - cardDeck " + cardDeck.jp);
             if (cardDeck != null) {
@@ -1211,7 +1220,20 @@ public class MainActivity extends Activity
             }
         }
     }
+    private void displayToastForLimitTime(String message,long time){
+        Log.d(TAG, "displayToastForLimitTime() mes:"+message+" time:"+time);
 
+        final Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT);
+        toast.show();
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                toast.cancel();
+            }
+        }, time);
+    }
     // After a player called Yaniv, and the msg was received
     // Update the scores for all the players.
 
@@ -2684,7 +2706,12 @@ public class MainActivity extends Activity
             for (int i = 0; i < myDrop.size(); i++) {
                 myCards.remove(myDrop.get(i));
             }
+        if (cardDeck.getSize()==0){
+            shuffleCardDeck();
+        }
+        else{
 
+        }
             Card pop = cardDeck.jp.remove(0);
             myCards.add(pop);
             primaryDeck.add(myDrop);
@@ -2695,6 +2722,25 @@ public class MainActivity extends Activity
             removeHighLightFromCards();
             onTurnFinished((byte) 5, myDrop);
         }
+    }
+
+    private void shuffleCardDeck() {
+        Log.d(TAG, "shuffleCardDeck()");
+
+        //  Move the cards from primarydeck to card deck.
+        ArrayList<Card> lastCards = primaryDeck.pop();
+        for (ArrayList<Card> card : primaryDeck){
+            for(int i=0;i<card.size();i++){
+                cardDeck.addToJackpot(card.remove(i));
+            }
+        }
+        primaryDeck.removeAllElements();
+        primaryDeck.add(lastCards);
+        //  Suffeling the card deck.
+        cardDeck.shuffle();
+        // Send the primarydeck and card deck to others participations.
+        sendCardDeckToAllParticipants(true);
+        sendPrimaryDeckToAllParticipants();
     }
 
     private void removeHighLightFromCards() {

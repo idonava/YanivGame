@@ -50,7 +50,7 @@ public class Cards {
     public void addToJackpot(Card c){
         jp.add(c);
     }
-    public void suffle() {
+    public void shuffle() {
         Collections.shuffle(jp);
 
     }

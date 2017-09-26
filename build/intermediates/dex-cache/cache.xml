@@ -3,12 +3,12 @@
 
     <item
         is-multidex="false"
-        jar="C:\Users\Ido\Downloads\android-basic-samples-master (4)\android-basic-samples-master\YanivGame\libraries\BaseGameUtils\build\intermediates\bundles\default\classes.jar"
+        jar="C:\Users\Idonava\StudioProjects\YanivGame\libraries\BaseGameUtils\build\intermediates\bundles\default\classes.jar"
         jumboMode="false"
         optimize="true"
         revision="25.0.3"
         sha1="c44681171eca986d3771e736177cd7f3c1c91dad">
-        <dex dex="C:\Users\Ido\Downloads\android-basic-samples-master (4)\android-basic-samples-master\YanivGame\Yaniv\build\intermediates\pre-dexed\debug\classes_8a3f980cb34fbc8dc2d5b85adf8c0f6e11f8f5b7.jar" />
+        <dex dex="C:\Users\Idonava\StudioProjects\YanivGame\Yaniv\build\intermediates\pre-dexed\debug\classes_59c27215b09fd2fe9a15e8d045b34d1c1d2884f4.jar" />
     </item>
 
 </items>
