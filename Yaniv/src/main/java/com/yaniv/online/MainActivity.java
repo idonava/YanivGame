@@ -205,6 +205,7 @@ public class MainActivity extends Activity
     private int[] invalidDrop = {999};
     EditText takeCardEditText;
     Map<String, Integer> cardsDrawable = new HashMap<>();
+    CountDownTimer cdt;
 
     public static Context baseContext;
     static MainActivity instance;
@@ -781,7 +782,6 @@ public class MainActivity extends Activity
 
     private void sendParticipantsCardsToAllParticipants() {
         Log.d(TAG, "sendParticipantsCardsToAllParticipants() ");
-//        calculateSum();
 
         byte[] b = new byte[0];
         try {
@@ -900,7 +900,10 @@ public class MainActivity extends Activity
 
     @Override
     public void onPeerLeft(Room room, List<String> peersWhoLeft) {
-        updateRoom(room);
+//        updateRoom(room);
+        Toast toast = Toast.makeText(getApplicationContext(), "A player has left the room", Toast.LENGTH_SHORT);
+        toast.show();
+        leaveRoom();
     }
 
     @Override
@@ -1215,6 +1218,10 @@ public class MainActivity extends Activity
             checkReadyList();
         }
 
+        else if ((int)buf[0] == 10){
+
+        }
+
         // Regular messages to change the turn.
         else {
 
@@ -1344,22 +1351,28 @@ public class MainActivity extends Activity
             timer.setVisibility(View.VISIBLE);
             readyButton.setVisibility(View.VISIBLE);
 
-            new CountDownTimer(30000, 1000) {
+          cdt = new CountDownTimer(30000, 1000) {
 
                 public void onTick(long millisUntilFinished) {
                     timer.setText("New game starts in: " + millisUntilFinished / 1000 + " seconds" + System.getProperty("line.separator") + "or when everyone is ready.");
                     if (readyToStartGame){
                         onFinish();
+                        cdt.cancel();
                     }
                 }
 
                 public void onFinish() {
+                    cancelTimer();
                     timer.setVisibility(View.GONE);
                     readyButton.setVisibility(View.GONE);
                     onRoomConnected(mStatusCode, mRoom);
                 }
             }.start();
         }
+    }
+
+    private void cancelTimer(){
+        cdt.cancel();
     }
 
     private void setPlayerPositonUI() {
@@ -1913,7 +1926,7 @@ public class MainActivity extends Activity
         ImageView myCard;
         Log.d(TAG, "updateParticipantUI() - mParticipantCards.get(pid) - " + mParticipantCards.get(pid));
 
-        for (i = 0; i < mParticipantCards.get(pid).size(); i++) {
+        for (i = 0; i < mParticipantCards.get(pid).size() && i < 5; i++) {
             int drawable;
             if (yaniv) {
                 drawable = cardsDrawable.get("" + mParticipantCards.get(pid).get(i).getKey());
