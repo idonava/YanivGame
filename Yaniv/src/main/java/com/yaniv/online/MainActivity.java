@@ -1057,12 +1057,8 @@ public class MainActivity extends Activity
             updateTurnGUI();
         }
 
-//        broadcastScore(true);
-//        sendCardDeckToAllParticipants();
-//        sendMyCardsToAllParticipants();
-//        sendPrimaryDeckToAllParticipants();
         ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
-        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
+        ((Button) (findViewById(R.id.button_score))).setText("Current: " + mySum);
     }
 
     public void updatePlayersOnTurnFinishSingle(String ID, int LDT) {
@@ -1107,12 +1103,8 @@ public class MainActivity extends Activity
             updateTurnGUI();
         }
 
-//        broadcastScore(true);
-//        sendCardDeckToAllParticipants();
-//        sendMyCardsToAllParticipants();
-//        sendPrimaryDeckToAllParticipants();
         ((findViewById(R.id.yaniv_declare))).setVisibility(View.GONE);
-        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
+        ((Button) (findViewById(R.id.button_score))).setText("Current: " + mySum);
     }
     /*
      * COMMUNICATIONS SECTION. Methods that implement the game's network
@@ -1136,12 +1128,14 @@ public class MainActivity extends Activity
         if (buf[0] == 20) {
 
             turn = buf[1];
-
             Card newCard;
+            TextView lastPlayerPick = (TextView) (findViewById(R.id.lastPlayerPick));
             if (buf[2] == 5) {
                 // if the last player took from the deck, remove the first card
+                lastPlayerPick.setText("Last player picked from the deck");
                 newCard = cardDeck.jp.remove(0);
             } else {
+                lastPlayerPick.setText("Last player picked: " + primaryDeck.peek().get(buf[2]).toString());
                 ArrayList<Card> lastDrop = primaryDeck.peek();
                 newCard = lastDrop.get(buf[2]);
             }
@@ -1361,6 +1355,7 @@ public class MainActivity extends Activity
 
                 public void onFinish() {
                     timer.setVisibility(View.GONE);
+                    readyButton.setVisibility(View.GONE);
                     onRoomConnected(mStatusCode, mRoom);
                 }
             }.start();
@@ -1472,6 +1467,15 @@ public class MainActivity extends Activity
         // 0-4 indicating card index from thrown pile
         // 5 if taken from the deck
         sendMsg[2] = pickedCardIndex;
+
+        TextView lastPlayerPick = (TextView) (findViewById(R.id.lastPlayerPick));
+        if (pickedCardIndex == 5){
+            lastPlayerPick.setText("You picked a random card");
+        }
+        else {
+            lastPlayerPick.setText("You picked from dropped pile");
+        }
+
 
         sendMsg[3] = (byte) myLastDropType;
 
@@ -1934,6 +1938,8 @@ public class MainActivity extends Activity
         (findViewById(R.id.rightPlayIcon)).setVisibility(View.GONE);
         (findViewById(R.id.leftPlayIcon)).setVisibility(View.GONE);
         (findViewById(R.id.yaniv_declare)).setVisibility(View.GONE);
+        TextView lastPlayerPick = (TextView) (findViewById(R.id.lastPlayerPick));
+        lastPlayerPick.setText("");
         Log.d(TAG, "updateParticipantsCardsOnGameOverUI()");
         int i;
         ImageView myCard;
@@ -2060,7 +2066,7 @@ public class MainActivity extends Activity
         for (Card card : myCards) {
             mySum += card.v;
         }
-        ((Button) (findViewById(R.id.button_score))).setText("Score: " + mySum);
+        ((Button) (findViewById(R.id.button_score))).setText("Current: " + mySum);
 
     }
 
@@ -2283,13 +2289,15 @@ public class MainActivity extends Activity
 
     public void declareYanivOnClick(View view) {
         //send a declare message to all participants.
+
+        disableAllCards();
+
         byte[] sendMsg = new byte[5];
         sendMsg[0] = (int) 7;
 
         byte yanivCallerIndex = 0;
         boolean isAsaf = false;
         int min = mySum;
-        int thisGameScores[] = new int[mParticipants.size()];
         for (byte i = 0; i < mParticipants.size(); i++) {
             String pid = mParticipants.get(i).getParticipantId();
             if (!pid.equals(mMyId)) {
@@ -2327,6 +2335,20 @@ public class MainActivity extends Activity
         // each participant "shows" his cards and his score UI
 
         //the game stop.
+    }
+
+    private void disableAllCards(){
+        (findViewById(R.id.my_card_1)).setClickable(false);
+        (findViewById(R.id.my_card_2)).setClickable(false);
+        (findViewById(R.id.my_card_3)).setClickable(false);
+        (findViewById(R.id.my_card_4)).setClickable(false);
+        (findViewById(R.id.my_card_5)).setClickable(false);
+        (findViewById(R.id.dropped_1)).setClickable(false);
+        (findViewById(R.id.dropped_3)).setClickable(false);
+        (findViewById(R.id.dropped_2)).setClickable(false);
+        (findViewById(R.id.dropped_4)).setClickable(false);
+        (findViewById(R.id.dropped_5)).setClickable(false);
+        (findViewById(R.id.deck_cards)).setClickable(false);
     }
 
     public void checkYanivOpportunity() {
