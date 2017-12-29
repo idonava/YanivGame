@@ -1,8 +1,7 @@
 ![](https://github.com/idonava/YanivGame/blob/master/img1.png)
 
 # YanivGame
-In this project we developed an online Yaniv card game.
-In our app you will be able to play against players around the world, as well as playing solo against the Computer.
+play against players around the world, as well as playing solo against the Computer.
 
 # Technical Information
 • Platform – Android
